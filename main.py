@@ -78,8 +78,9 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 templates = Jinja2Templates(directory="templates")
 # 添加跨域中间件
+origin = os.getenv("ORIGIN", "https://assistai.onrender.com")
 origins = [
-    "http://localhost:3000",
+    origin,
 ]
 app.add_middleware(
     CORSMiddleware,
