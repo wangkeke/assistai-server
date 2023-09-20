@@ -115,9 +115,11 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         
 
 # 发送邮箱验证码
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.163.com") 
+# ykgk vzpk owed qdrv
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.163.com")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", "Assisai@163.com")
 EMAIL_SECRET = os.getenv("EMAIL_SECRET", "TPTHAWIXNHHHRHRI") 
+EMAIL_PORT = os.getenv("EMAIL_PORT", 25) 
 async def send_email_captcha(to_email: str):
     # 生成6位随机验证码  
     code = random.randint(100000, 999999)
@@ -126,7 +128,7 @@ async def send_email_captcha(to_email: str):
     msg['From'] = EMAIL_SENDER
     msg['To'] = to_email
     # 发送邮件
-    smtp = smtplib.SMTP(host=SMTP_SERVER, port=25)
+    smtp = smtplib.SMTP(host=SMTP_SERVER, port=EMAIL_PORT)
     smtp.login(EMAIL_SENDER,EMAIL_SECRET)
     smtp.sendmail(EMAIL_SENDER, to_email, msg.as_string())
     smtp.quit()
