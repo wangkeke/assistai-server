@@ -115,7 +115,8 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         
 
 # 发送邮箱验证码
-# ykgk vzpk owed qdrv
+# gmail: ykgk vzpk owed qdrv
+# 163: MTHXNMDQCTAPMLZW
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.163.com")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", "Assisai@163.com")
 EMAIL_SECRET = os.getenv("EMAIL_SECRET", "TPTHAWIXNHHHRHRI") 
@@ -128,10 +129,13 @@ async def send_email_captcha(to_email: str):
     msg['From'] = EMAIL_SENDER
     msg['To'] = to_email
     # 发送邮件
-    smtp = smtplib.SMTP(host=SMTP_SERVER, port=EMAIL_PORT)
-    smtp.login(EMAIL_SENDER,EMAIL_SECRET)
-    smtp.sendmail(EMAIL_SENDER, to_email, msg.as_string())
-    smtp.quit()
+    with smtplib.SMTP_SSL(host=SMTP_SERVER, port=EMAIL_PORT) as server:
+        server.login(EMAIL_SENDER, EMAIL_SECRET) 
+        server.sendmail(
+            EMAIL_SENDER, 
+            to_email, 
+            msg.as_string()
+        )
     return code
 
 # 发送邮箱注册码
