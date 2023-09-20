@@ -28,7 +28,7 @@ MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 
 # 配置日志
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
-logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARN)
 logger = logging.getLogger(__name__)
 
 
