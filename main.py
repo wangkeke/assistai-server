@@ -316,6 +316,23 @@ def add_chat(topic_id: str, chat_create: schemas.TopicChatCreate, current_user: 
 def remove_chat(topic_id: str, id: str , current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     crud.remove_topic_chat(db, topic_id=topic_id, chat_id=id)
 
+# 流式响应函数
+def event_publisher(chunks, db: Session, topic_id: str):
+    collected_messages = []
+    role = None
+    for chunk in chunks:
+        delta = chunk['choices'][0]['delta']
+        if delta.get('role'):
+            role = delta.get('role')
+            yield dict(event='start', data= role)
+        if delta.get('content'):
+            content = delta.get('content')
+            collected_messages.append(content)
+            yield dict(event='stream', data=content.replace('\n', '\\n'))
+    contents = ''.join(collected_messages)
+    assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=contents), topic_id=topic_id)
+    yield dict(event='end', data=assistant_chat.id)
+
 # 聊天交互接口
 @app.post("/topic/{topic_id}/chat_conversation")
 def chat(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
@@ -359,21 +376,3 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-# 流式响应函数
-def event_publisher(chunks, db: Session, topic_id: str):
-    collected_messages = []
-    role = None
-    for chunk in chunks:
-        delta = chunk['choices'][0]['delta']
-        if delta.get('role'):
-            role = delta.get('role')
-            yield dict(event='start', data= role)
-        if delta.get('content'):
-            content = delta.get('content')
-            collected_messages.append(content)
-            yield dict(event='stream', data=content.replace('\n', '\\n'))
-    contents = ''.join(collected_messages)
-    assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=contents), topic_id=topic_id)
-    yield dict(event='end', data=assistant_chat.id)
