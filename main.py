@@ -78,7 +78,7 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 templates = Jinja2Templates(directory="templates")
 # 添加跨域中间件
-origin = os.getenv("ORIGIN", "https://assistai.onrender.com")
+origin = os.getenv("ORIGIN", "http://localhost:3000")
 origins = [
     origin,
 ]
@@ -305,11 +305,6 @@ async def get_topic(topic_id: str, current_user: Annotated[schemas.User, Depends
 async def page_topic_chats(topic_id: str, current_user: Annotated[schemas.User, Depends(get_current_user)], next_chat_id: int = None, limit: int = None, db: Session = Depends(get_db)):
     return crud.get_topic_chats(db, topic_id=topic_id, next_chat_id=next_chat_id, limit=limit)
 
-# 返回页面模板
-# @app.get("/", response_class=HTMLResponse)
-# def get(request: Request):
-#     return templates.TemplateResponse("index.html", {"request": request, "domain": DOMAIN_NAME})
-
 # 添加聊天记录
 @app.post("/topic/{topic_id}/add_chat")
 def add_chat(topic_id: str, chat_create: schemas.TopicChatCreate, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
@@ -320,11 +315,42 @@ def add_chat(topic_id: str, chat_create: schemas.TopicChatCreate, current_user: 
 def remove_chat(topic_id: str, id: str , current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     crud.remove_topic_chat(db, topic_id=topic_id, chat_id=id)
 
+# 生成图像函数
+def create_image(prompt: str):
+    """Generate images for user"""
+    response = openai.Image.create(
+        api_key= OPENAI_API_KEY,
+        prompt= prompt,
+        n=1,
+        size="512x512",
+        response_format="b64_json"
+    )
+    return response['data'][0]['b64_json']
+
+# 定义模型函数调用
+functions = [ 
+  {
+    "name": "create_image",
+    "description": "generate images for user",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "prompt": {
+                "type": "string",
+                "description": "Prompt for the image the user wants to generate",
+            },
+        },
+        "required": ["prompt"],
+    },
+  }
+]
+
 # 流式响应函数
 def event_publisher(chunks, db: Session, topic_id: str):
     collected_messages = []
     role = None
     for chunk in chunks:
+        logger.info(chunk)
         delta = chunk['choices'][0]['delta']
         if delta.get('role'):
             role = delta.get('role')
@@ -343,7 +369,9 @@ def chat(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_use
     response = openai.ChatCompletion.create(model = MODEL_NAME, 
                                  api_key = OPENAI_API_KEY,
                                  messages = jsonable_encoder(chat_creates),
-                                 stream = True
+                                 stream = True,
+                                 functions = functions,
+                                 function_call = "auto"
                                  )
     return EventSourceResponse(event_publisher(response, db=db, topic_id=topic_id))
 
@@ -374,6 +402,8 @@ def create_chat_issue(chat_issue: schemas.TopicChatIssueCreate, current_user: An
 @app.post("/update_chat_issue")
 def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     crud.update_topic_chat_issue(db, topic_chat_issue=issue_update)
+
+
 
 
 
