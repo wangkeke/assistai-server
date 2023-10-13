@@ -322,6 +322,7 @@ def remove_chat(topic_id: str, id: str , current_user: Annotated[schemas.User, D
 
 # 读取网络地址图片并写入本地磁盘
 def save_image(url: str):
+    os.makedirs(f"{DISK_PATH}/images", exist_ok=True)
     response = urllib.request.urlopen(url)
     data = response.read()
     image_path = f"/images/{str(uuid.uuid4())}.webp"
