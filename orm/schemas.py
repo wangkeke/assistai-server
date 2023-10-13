@@ -55,7 +55,7 @@ class TopicUpdate(TopicBase):
 
 class TopicChatBase(BaseModel):
     role: str = Query(default="user", regex="^(system)|(assistant)|(user)$")
-    content: str = Query(default=..., min_length=1)
+    content: str = Query(default=...)
 
 class TopicChatCreate(TopicChatBase):
     pass
