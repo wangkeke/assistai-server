@@ -1,12 +1,14 @@
 import os
+import json
 from datetime import datetime, date, timedelta
+import urllib.request
+import uuid
 import logging
 import openai
 from typing import Dict, List, Annotated
 from fastapi import FastAPI, Cookie, Depends, Query, Request, status, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
@@ -21,10 +23,11 @@ import random
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
+# 环境变量
 DOMAIN_NAME = os.environ.get("DOMAIN_NAME", "127.0.0.1:8000")
 MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
+DISK_PATH = os.getenv("DISK_PATH", "/home/data")
 
 # 配置日志
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
@@ -77,6 +80,8 @@ app = FastAPI()
 # 添加SessionMiddleware
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 templates = Jinja2Templates(directory="templates")
+STATIC_PATH = "/static"
+app.mount(path=STATIC_PATH, app=StaticFiles(directory=DISK_PATH), name="static")
 # 添加跨域中间件
 origin = os.getenv("ORIGIN", "http://localhost:3000")
 origins = [
@@ -315,17 +320,34 @@ def add_chat(topic_id: str, chat_create: schemas.TopicChatCreate, current_user: 
 def remove_chat(topic_id: str, id: str , current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     crud.remove_topic_chat(db, topic_id=topic_id, chat_id=id)
 
+# 读取网络地址图片并写入本地磁盘
+def save_image(url: str):
+    os.makedirs(f"{DISK_PATH}/images")
+    response = urllib.request.urlopen(url)
+    data = response.read()
+    image_path = f"/images/{str(uuid.uuid4())}.webp"
+    with open(DISK_PATH + image_path, 'wb') as f: 
+        f.write(data)
+    return image_path
+
 # 生成图像函数
 def create_image(prompt: str):
     """Generate images for user"""
+    response_format = "url"
     response = openai.Image.create(
         api_key= OPENAI_API_KEY,
         prompt= prompt,
         n=1,
-        size="512x512",
-        response_format="b64_json"
+        size="256x256",
+        response_format=response_format
     )
-    return response['data'][0]['b64_json']
+    return save_image(url=response['data'][0][response_format])
+
+# 生成图像测试函数
+def create_image_test(prompt: str):
+    """Generate images for user"""
+    
+    return save_image(url="https://cdn.openai.com/API/images/guides/image_generation_simple.webp")
 
 # 定义模型函数调用
 functions = [ 
@@ -349,8 +371,13 @@ functions = [
 def event_publisher(chunks, db: Session, topic_id: str):
     collected_messages = []
     role = None
+    finish_reason = None
+    
+    function_call = None
+    function_call_name = None
+    function_call_arguments = []
+    
     for chunk in chunks:
-        logger.info(chunk)
         delta = chunk['choices'][0]['delta']
         if delta.get('role'):
             role = delta.get('role')
@@ -359,8 +386,26 @@ def event_publisher(chunks, db: Session, topic_id: str):
             content = delta.get('content')
             collected_messages.append(content)
             yield dict(event='stream', data=content.replace('\n', '\\n'))
-    contents = ''.join(collected_messages)
-    assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=contents), topic_id=topic_id)
+        if delta.get('function_call'):
+            function_call = delta.get('function_call')
+            if function_call.get('name'):
+                function_call_name = function_call.get('name')
+            if function_call.get('arguments'):
+                function_call_arguments.append(function_call.get('arguments'))
+        finish_reason = chunk['choices'][0]['finish_reason']
+    
+    content_type = 'text'
+    content = None
+    if finish_reason == 'function_call':
+        if function_call_name == 'create_image':
+            content_type = 'image'
+            prompt = json.loads(function_call_arguments)["prompt"]
+            content = STATIC_PATH + create_image(prompt=prompt)
+            content = f"url={DOMAIN_NAME}{content}, prompt={prompt}"
+            yield dict(event='image', data=content)
+    else:
+        content = ''.join(collected_messages)
+    assistant_chat = crud.create_topic_chat(db, topic_chat=schemas .TopicChatCreate(role=role, content_type=content_type, content=content), topic_id=topic_id)
     yield dict(event='end', data=assistant_chat.id)
 
 # 聊天交互接口
@@ -387,7 +432,10 @@ def chats(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_us
             collected_messages.append(testValue[i])
             yield dict(event='stream', data=testValue[i].replace('\n', '\\n'))
         contents = ''.join(collected_messages)
-        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=contents), topic_id=topic_id)
+        prompt = chat_creates[len(chat_creates)-1].content
+        content = STATIC_PATH + create_image(prompt=prompt)
+        yield dict(event='image', data=f"url={DOMAIN_NAME}{content}, prompt={prompt}")
+        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content_type="plain", content=contents), topic_id=topic_id)
         yield dict(event='end', data=assistant_chat.id)
     return EventSourceResponse(gp(db=db, topic_id=topic_id))
         

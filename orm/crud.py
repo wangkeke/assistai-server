@@ -85,7 +85,7 @@ def get_topic_chats(db: Session, topic_id: str, next_chat_id: int = None, limit:
         return db.query(models.TopicChat).filter(models.TopicChat.topic_id==topic_id, models.TopicChat.flag == True).order_by(models.TopicChat.id.desc()).offset(0).limit(limit).all()
 
 def create_topic_chat(db: Session, topic_chat: schemas.TopicChatCreate, topic_id: str):
-    topic_chat = models.TopicChat(role=topic_chat.role, content=topic_chat.content, topic_id=topic_id, create_time=datetime.now(), flag=True)
+    topic_chat = models.TopicChat(role=topic_chat.role, content_type=topic_chat.content_type, content=topic_chat.content, topic_id=topic_id, create_time=datetime.now(), flag=True)
     db.add(topic_chat)
     db.commit()
     db.refresh(topic_chat)

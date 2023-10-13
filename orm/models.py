@@ -43,7 +43,7 @@ class Topic(Base):
     __tablename__ = 'topic'
 
     id = Column(String(50), primary_key=True)
-    title = Column(String(500))
+    title = Column(Text)
     turn = Column(Integer)
     flag = Column(Boolean)
     last_active_time = Column(DateTime)
@@ -56,6 +56,7 @@ class TopicChat(Base):
 
     id = Column(Integer, primary_key=True)
     role = Column(String(20))
+    content_type = Column(String(50))
     content = Column(Text)
     flag = Column(Boolean)
     create_time = Column(TIMESTAMP)

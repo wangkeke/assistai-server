@@ -55,10 +55,10 @@ class TopicUpdate(TopicBase):
 
 class TopicChatBase(BaseModel):
     role: str = Query(default="user", regex="^(system)|(assistant)|(user)$")
-    content: str = Query(default=..., min_length=1, max_length=8000)
+    content: str = Query(default=..., min_length=1)
 
 class TopicChatCreate(TopicChatBase):
-    pass
+    content_type: str | None
 
 class TopicChatDelete(BaseModel):
     id: int
@@ -82,6 +82,7 @@ class TopicChatIssue(TopicChatIssueBase):
 
 class TopicChat(TopicChatBase):
     id: int
+    content_type: str = None
     create_time: datetime
     topic_chat_issues: list[TopicChatIssue] = []
     class Config:
