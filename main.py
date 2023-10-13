@@ -343,12 +343,6 @@ def create_image(prompt: str):
     )
     return save_image(url=response['data'][0][response_format])
 
-# 生成图像测试函数
-def create_image_test(prompt: str):
-    """Generate images for user"""
-    
-    return save_image(url="https://cdn.openai.com/API/images/guides/image_generation_simple.webp")
-
 # 定义模型函数调用
 functions = [ 
   {
@@ -405,7 +399,7 @@ def event_publisher(chunks, db: Session, topic_id: str):
             yield dict(event='image', data=content)
     else:
         content = ''.join(collected_messages)
-    assistant_chat = crud.create_topic_chat(db, topic_chat=schemas .TopicChatCreate(role=role, content_type=content_type, content=content), topic_id=topic_id)
+    assistant_chat = crud.create_topic_chat(db, topic_chat=schemas .TopicChatCreate(role=role, content=content), topic_id=topic_id, content_type=content_type)
     yield dict(event='end', data=assistant_chat.id)
 
 # 聊天交互接口
@@ -435,7 +429,7 @@ def chats(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_us
         prompt = chat_creates[len(chat_creates)-1].content
         content = STATIC_PATH + create_image(prompt=prompt)
         yield dict(event='image', data=f"url={DOMAIN_NAME}{content}, prompt={prompt}")
-        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content_type="plain", content=contents), topic_id=topic_id)
+        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=contents), topic_id=topic_id)
         yield dict(event='end', data=assistant_chat.id)
     return EventSourceResponse(gp(db=db, topic_id=topic_id))
         

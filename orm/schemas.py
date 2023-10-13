@@ -58,7 +58,7 @@ class TopicChatBase(BaseModel):
     content: str = Query(default=..., min_length=1)
 
 class TopicChatCreate(TopicChatBase):
-    content_type: str | None
+    pass
 
 class TopicChatDelete(BaseModel):
     id: int
