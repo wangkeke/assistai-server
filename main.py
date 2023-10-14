@@ -393,9 +393,10 @@ def event_publisher(chunks, db: Session, topic_id: str):
     if finish_reason == 'function_call':
         if function_call_name == 'create_image':
             content_type = 'image'
+            yield dict(event='prepare', data=content_type)
             prompt = json.loads(''.join(function_call_arguments))["prompt"]
             content = STATIC_PATH + create_image(prompt=prompt)
-            content = f"url={DOMAIN_NAME}{content}, prompt={prompt}"
+            content = f"url={content}, prompt={prompt}"
             yield dict(event='image', data=content)
     else:
         content = ''.join(collected_messages)
