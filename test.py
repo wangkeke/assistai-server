@@ -1,6 +1,7 @@
 import urllib.request
 import uuid
 import os
+from datetime import date, datetime 
 
 # response = urllib.request.urlopen("https://cdn.openai.com/API/images/guides/image_generation_simple.webp")
 # data = response.read()
@@ -10,4 +11,6 @@ import os
 #     f.write(data)
 # print("写入完成")
 
-os.makedirs(f"/home/data/images", exist_ok=True)
+# os.makedirs(f"/home/data/images", exist_ok=True)
+
+print(date.today())

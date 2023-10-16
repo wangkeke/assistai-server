@@ -53,6 +53,25 @@ def update_user_last_login_time(db: Session, user_id: int):
     db.query(models.User).filter(models.User.id == user_id).update({"last_login_time": datetime.now()})
     # db.commit()
 
+def create_user_set(db: Session, user_id: int, user_set_creates: list[schemas.UserSetCreate]):
+    db_user_sets = []
+    for usc in user_set_creates:
+        db_user_set = models.UserSet(set_key=usc.set_key, set_value=usc.set_value, user_id=user_id)
+        db_user_set.create_time = datetime.now()
+        db_user_sets.append(db_user_set)
+    db.add_all(db_user_sets)
+    db.commit()
+    return db_user_sets
+
+def update_user_set(db: Session, user_id: int, user_set_update: schemas.UserSetUpdate):
+    db.query(models.UserSet).filter(models.User.id == user_id, models.UserSet.set_key == user_set_update.set_key).update({"set_value": user_set_update.set_value})
+
+def get_user_set(db: Session, user_id: int, set_key: str):
+    if set_key:
+        return db.query(models.UserSet).filter(models.UserSet.user_id == user_id).all()
+    else:
+        return db.query(models.UserSet).filter(models.UserSet.user_id == user_id, models.UserSet.set_key == set_key).all()
+
 def get_topics(db: Session, user_id: int, skip: int = 0, limit: int = 10):
     return db.query(models.Topic).add_columns(models.Topic.id, models.Topic.title, models.Topic.last_active_time).filter(models.Topic.user_id==user_id, models.Topic.flag == True).order_by(models.Topic.last_active_time.desc()).offset(skip).limit(limit).all()
 
@@ -105,3 +124,20 @@ def create_topic_chat_issue(db: Session, user_id: int, topic_chat_issue: schemas
 def update_topic_chat_issue(db: Session, topic_chat_issue: schemas.TopicChatIssueUpdate):
     db.query(models.TopicChatIssue).filter(models.TopicChatIssue.id==topic_chat_issue.id).update({"type": topic_chat_issue.type, "detail": topic_chat_issue.detail})
     # db.commit()
+
+def create_user_chat_stats(db: Session, user_id: int, user_chat_stats_create: schemas.UserChatStatsCreate):
+    db_user_chat_stats = models.UserChatStats(user_id=user_id, stats_date = user_chat_stats_create.stats_date, 
+                                              stats_key = user_chat_stats_create.stats_key,
+                                              stats_value = user_chat_stats_create.stats_value)
+    db_user_chat_stats.create_time = datetime.now()
+    db.add(db_user_chat_stats)
+    db.commit()
+    db.refresh(db_user_chat_stats)
+    return db_user_chat_stats
+
+def increase_user_chat_stats(db: Session, id: int):
+    db.query(models.UserChatStats).filter(models.UserChatStats.id == id).update({"stats_value": models.UserChatStats.stats_value+1})
+
+def get_user_chat_stats(db: Session, user_id: int, stats_date: datetime, stats_key: str):
+    return db.query(models.UserChatStats).filter(models.UserChatStats.user_id == user_id, models.UserChatStats.stats_date == stats_date,
+                                          models.UserChatStats.stats_key == stats_key).first()

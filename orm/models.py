@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, DateTime, TIMESTAMP
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, DateTime, TIMESTAMP, Date
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -63,6 +63,17 @@ class TopicChat(Base):
     topic_id = Column(String(50), ForeignKey("topic.id"))
     topic = relationship("Topic")
     topic_chat_issues = relationship("TopicChatIssue", back_populates="topic_chat")
+
+class UserChatStats(Base):
+    __tablename__ = 'user_chat_stats'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    stats_date = Column(Date)
+    stats_key = Column(String(50))
+    stats_value = Column(Integer)
+    update_time = Column(TIMESTAMP)
+    create_time = Column(TIMESTAMP)
 
 class TopicChatIssue(Base):
     __tablename__ = 'topic_chat_issue'

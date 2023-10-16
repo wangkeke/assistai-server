@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from datetime import datetime, date, timedelta
 import urllib.request
 import uuid
@@ -28,6 +29,8 @@ DOMAIN_NAME = os.environ.get("DOMAIN_NAME", "127.0.0.1:8000")
 MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 DISK_PATH = os.getenv("DISK_PATH", "/home/data")
+# 默认，免费用户每日请求最大次数
+DEFAULT_REQUEST_PER_DAY = 3
 
 # 配置日志
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
@@ -134,13 +137,18 @@ async def send_email_captcha(to_email: str):
     msg['From'] = EMAIL_SENDER
     msg['To'] = to_email
     # 发送邮件
-    with smtplib.SMTP_SSL(host=SMTP_SERVER, port=EMAIL_PORT) as server:
-        server.login(EMAIL_SENDER, EMAIL_SECRET) 
-        server.sendmail(
-            EMAIL_SENDER, 
-            to_email, 
-            msg.as_string()
-        )
+    if EMAIL_PORT == 25:
+        with smtplib.SMTP(host=SMTP_SERVER, port=EMAIL_PORT) as smtp:
+            smtp.login(EMAIL_SENDER,EMAIL_SECRET)
+            smtp.sendmail(EMAIL_SENDER, to_email, msg.as_string())
+    else:
+        with smtplib.SMTP_SSL(host=SMTP_SERVER, port=EMAIL_PORT) as server:
+            server.login(EMAIL_SENDER, EMAIL_SECRET) 
+            server.sendmail(
+                EMAIL_SENDER, 
+                to_email, 
+                msg.as_string()
+            )
     return code
 
 # 发送邮箱注册码
@@ -194,7 +202,8 @@ async def regist_user(request: Request, user_create: schemas.UserCreate, db: Ses
             detail="邮箱已被注册"
         )
     user_create.password = pwd_context.hash(user_create.password)
-    crud.create_user(db, user_create=user_create)
+    user = crud.create_user(db, user_create=user_create)
+    crud.create_user_set(db, user_id=user.id, user_set_creates=[schemas.UserSetCreate(set_key='RPD', set_value=DEFAULT_REQUEST_PER_DAY)])
 
 # 找回密码
 @app.post('/send_email_reset_code')
@@ -310,9 +319,31 @@ async def get_topic(topic_id: str, current_user: Annotated[schemas.User, Depends
 async def page_topic_chats(topic_id: str, current_user: Annotated[schemas.User, Depends(get_current_user)], next_chat_id: int = None, limit: int = None, db: Session = Depends(get_db)):
     return crud.get_topic_chats(db, topic_id=topic_id, next_chat_id=next_chat_id, limit=limit)
 
+# 检查请求限制
+def check_request_limit(db: Session, current_user: schemas.User):
+    # 检查是否超出使用限制
+    rpd_amount = DEFAULT_REQUEST_PER_DAY 
+    user_sets = crud.get_user_set(db, current_user.id, "RPD")
+    if user_sets:
+        rpd_amount = int(user_sets[0].set_value)
+    rpd_count = 0
+    user_chat_stats = crud.get_user_chat_stats(db, user_id=current_user.id, stats_date=date.today(), stats_key="RPD")
+    if not user_chat_stats:
+        user_chat_stats_create = schemas.UserChatStatsCreate(stats_date=date.today(), stats_key="RPD", stats_value=0)
+        user_chat_stats = crud.create_user_chat_stats(db, user_chat_stats_create=user_chat_stats_create, user_id=current_user.id)
+    else:
+        rpd_count = user_chat_stats.stats_value
+    if rpd_count >= rpd_amount:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="你已经超出今日使用限制！"
+        )
+    return user_chat_stats
+
 # 添加聊天记录
 @app.post("/topic/{topic_id}/add_chat")
 def add_chat(topic_id: str, chat_create: schemas.TopicChatCreate, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+    check_request_limit(db, current_user=current_user)
     return crud.create_topic_chat(db, topic_chat=chat_create, topic_id=topic_id)
 
 # 删除聊天信息
@@ -343,6 +374,11 @@ def create_image(prompt: str):
     )
     return save_image(url=response['data'][0][response_format])
 
+# 生成图像测试函数
+def create_image_test(prompt: str):
+    """Generate images for user"""
+    return "/images/360fbc24-c154-4e30-9b82-060362baecbe.webp"
+
 # 定义模型函数调用
 functions = [ 
   {
@@ -362,7 +398,7 @@ functions = [
 ]
 
 # 流式响应函数
-def event_publisher(chunks, db: Session, topic_id: str):
+async def event_publisher(chunks, db: Session, topic_id: str):
     collected_messages = []
     role = None
     finish_reason = None
@@ -406,33 +442,54 @@ def event_publisher(chunks, db: Session, topic_id: str):
 # 聊天交互接口
 @app.post("/topic/{topic_id}/chat_conversation")
 def chat(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
-    response = openai.ChatCompletion.create(model = MODEL_NAME, 
-                                 api_key = OPENAI_API_KEY,
-                                 messages = jsonable_encoder(chat_creates),
-                                 stream = True,
-                                 functions = functions,
-                                 function_call = "auto"
-                                 )
-    return EventSourceResponse(event_publisher(response, db=db, topic_id=topic_id))
+    user_chat_stats = check_request_limit(db, current_user=current_user)
+    try: 
+        response = openai.ChatCompletion.create(model = MODEL_NAME, 
+                                    api_key = OPENAI_API_KEY,
+                                    messages = jsonable_encoder(chat_creates),
+                                    stream = True,
+                                    functions = functions,
+                                    function_call = "auto"
+                                    )
+        return EventSourceResponse(event_publisher(response, db=db, topic_id=topic_id))
+    finally: 
+        crud.increase_user_chat_stats(db, id=user_chat_stats.id)
 
 # 聊天交互测试接口
 @app.post("/topic/{topic_id}/chat_conversation_test")
 def chats(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
-    def gp(db: Session, topic_id: str):
-        collected_messages = []
-        role = "assistant"
-        testValue = "下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\ndef fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n"
-        yield dict(event='start', data= jsonable_encoder(chat_creates))
-        for i in range(len(testValue)):
-            collected_messages.append(testValue[i])
-            yield dict(event='stream', data=testValue[i].replace('\n', '\\n'))
-        contents = ''.join(collected_messages)
-        prompt = chat_creates[len(chat_creates)-1].content
-        content = STATIC_PATH + create_image(prompt=prompt)
-        yield dict(event='image', data=f"url={DOMAIN_NAME}{content}, prompt={prompt}")
-        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=contents), topic_id=topic_id)
-        yield dict(event='end', data=assistant_chat.id)
-    return EventSourceResponse(gp(db=db, topic_id=topic_id))
+    user_chat_stats = check_request_limit(db, current_user=current_user)
+    try:
+        def text_event_publisher(db: Session, topic_id: str):
+            collected_messages = []
+            role = "assistant"
+            testValue = "下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\ndef fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n"
+            yield dict(event='start', data= jsonable_encoder(chat_creates))
+            for i in range(len(testValue)):
+                collected_messages.append(testValue[i])
+                yield dict(event='stream', data=testValue[i].replace('\n', '\\n'))
+
+            content = ''.join(collected_messages)
+            assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=content), topic_id=topic_id)
+            yield dict(event='end', data=assistant_chat.id)
+        
+        def image_event_publisher(db: Session, topic_id: str):
+            role = "assistant"
+            testValue = "下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\ndef fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n"
+            yield dict(event='start', data= jsonable_encoder(chat_creates))
+            # 测试生成图像
+            content_type = 'image'
+            yield dict(event='prepare', data=content_type)
+            prompt = chat_creates[len(chat_creates)-1].content
+            content = STATIC_PATH + create_image_test(prompt=prompt)
+            content = f"url={content}, prompt={prompt}"
+            yield dict(event='image', data=content)
+            
+            assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=content), topic_id=topic_id, content_type=content_type)
+            yield dict(event='end', data=assistant_chat.id)
+        return EventSourceResponse(image_event_publisher(db=db, topic_id=topic_id))
+    finally: 
+        crud.increase_user_chat_stats(db, id=user_chat_stats.id)
         
 
 # 添加问题反馈

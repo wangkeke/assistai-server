@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel, EmailStr
 from fastapi import Query
 
@@ -41,6 +41,9 @@ class User(UserBase):
         orm_mode = True
 
 class UserSetCreate(UserSetBase):
+    pass
+
+class UserSetUpdate(UserSetBase):
     pass
 
 class TopicBase(BaseModel):
@@ -116,3 +119,11 @@ class SendEmail(BaseModel):
 
 class VerifyEmail(SendEmail):
     captcha: int = Query(min=100000, max=999999)
+
+class UserChatStatsBase(BaseModel):
+    stats_date: date
+    stats_key: str
+    stats_value: int
+
+class UserChatStatsCreate(UserChatStatsBase):
+    pass
