@@ -17,6 +17,9 @@ psycopg2==2.9.7
 open-interpreter==0.1.8
 
 # # 代码解释其依赖包
+pandas
+openpyxl
+
 # absl-py==1.4.0
 # affine==2.4.0
 # aiofiles==23.1.0
