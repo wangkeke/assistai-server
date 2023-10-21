@@ -517,7 +517,7 @@ interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interprete
 @app.post("/interpreter_chat")
 def update_chat_issue(chat: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
-    return interpreter.chat(chat, stream=True, display=False)
+    return interpreter.chat(chat, display=False)
 
 
 if __name__ == "__main__":
