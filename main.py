@@ -512,7 +512,9 @@ interpreter.auto_run = True # Don't require user confirmation
 interpreter.conversation_history = True  # To store history
 interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
 # interpreter.system_message += "\nAll shell are installed."
-interpreter.system_message += "\nRun all shell commands with -y."
+interpreter.system_message += f"""\nRun all shell commands with -y.\n
+All created files must be placed in the {DISK_PATH}/resource/ directory, even if the user specifies the directory.\n
+The format of the created file name must be uuid+ extension.\n"""
 
 # 代码解释
 @app.get("/interpreter_chat")
