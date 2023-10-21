@@ -521,7 +521,7 @@ interpreter.system_message += f"""\nRun all shell commands with -y.\n
 Use a random uuid to generate the file name."""
 
 # 代码解释
-@app.get("/interpreter_chat")
+@app.post("/interpreter_chat")
 def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
     def stream_response(message: str):
@@ -534,7 +534,8 @@ def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depend
                 yield dict(event='stream', data = chunk.message)
             elif chunk.end_of_message:
                 yield dict(event='end', data = "".join(collected_messages))
-        return EventSourceResponse(stream_response(message=message)) 
+    
+    return EventSourceResponse(stream_response(message=message)) 
 
 
 if __name__ == "__main__":
