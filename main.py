@@ -504,7 +504,20 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
     crud.update_topic_chat_issue(db, topic_chat_issue=issue_update)
 
 
+# 代码解释器插件
+import interpreter
+interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
+interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
+interpreter.auto_run = True # Don't require user confirmation
+interpreter.conversation_history = True  # To store history
+interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
+# interpreter.system_message += "\nAll shell are installed."
 
+# 代码解释
+@app.post("/interpreter_chat")
+def update_chat_issue(chat: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+    interpreter.conversation_filename = f"{current_user.id}.json"
+    return interpreter.chat(chat, stream=True, display=False)
 
 
 if __name__ == "__main__":
