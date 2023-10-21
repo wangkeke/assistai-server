@@ -518,7 +518,7 @@ interpreter.system_message += "\nRun all shell commands with -y."
 @app.get("/interpreter_chat")
 def update_chat_issue(chat: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
-    return Response(interpreter.chat(chat, stream=True, display=False), media_type="text/event-stream")
+    return EventSourceResponse(interpreter.chat(chat, stream=True))
     # return interpreter.chat(chat, display=False)
 
 
