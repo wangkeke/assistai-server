@@ -508,6 +508,7 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+print(f"++++++++++++++++++++++++++ sys.modules['sqlite3'] = {sys.modules['sqlite3']} ")
 import interpreter
 interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
 interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
