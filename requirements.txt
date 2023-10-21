@@ -15,4 +15,5 @@ passlib[bcrypt]
 itsdangerous
 SQLAlchemy==1.4.48
 psycopg2==2.9.7
+chromadb==0.3.29
 open-interpreter==0.1.10
