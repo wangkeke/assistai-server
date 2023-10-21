@@ -29,6 +29,7 @@ DOMAIN_NAME = os.environ.get("DOMAIN_NAME", "127.0.0.1:8000")
 MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 DISK_PATH = os.getenv("DISK_PATH", "/home/data")
+DEFAULT_TEMP_PATH = os.getenv("DEFAULT_TEMP_PATH", "/opt/render/project/src")
 # 默认，免费用户每日请求最大次数
 DEFAULT_REQUEST_PER_DAY = 2
 
@@ -85,6 +86,7 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 templates = Jinja2Templates(directory="templates")
 STATIC_PATH = "/static"
 app.mount(path=STATIC_PATH, app=StaticFiles(directory=DISK_PATH), name="static")
+app.mount(path="/public", app=StaticFiles(directory=DEFAULT_TEMP_PATH), name="public")
 # 添加跨域中间件
 origin = os.getenv("ORIGIN", "http://localhost:3000")
 origins = [
@@ -516,7 +518,7 @@ interpreter.conversation_history = True  # To store history
 interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
 # interpreter.system_message += "\nAll shell are installed.\nAll created files must be placed in the {DISK_PATH}/resource/ directory, even if the user specifies the directory.\n"
 interpreter.system_message += f"""\nRun all shell commands with -y.\n
-The file name must be in the format of uuid + extension."""
+Use a random uuid to generate the file name."""
 
 # 代码解释
 @app.get("/interpreter_chat")
