@@ -525,10 +525,16 @@ Use a random uuid to generate the file name."""
 def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
     def stream_response(message: str):
-        yield dict(event='start', data= "")
+        collected_messages = []
         for chunk in interpreter.chat(message, stream=True, display=False):
-            yield dict(event='stream', data= jsonable_encoder(chunk))
-    return EventSourceResponse(stream_response(message=message)) 
+            if chunk.start_of_message:
+                yield dict(event='start', data= "")
+            if chunk.message:
+                collected_messages.append(chunk.message)
+                yield dict(event='stream', data = chunk.message)
+            elif chunk.end_of_message:
+                yield dict(event='end', data = "".join(collected_messages))
+        return EventSourceResponse(stream_response(message=message)) 
 
 
 if __name__ == "__main__":
