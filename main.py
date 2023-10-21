@@ -7,7 +7,7 @@ import uuid
 import logging
 import openai
 from typing import Dict, List, Annotated
-from fastapi import FastAPI, Cookie, Depends, Query, Request, status, HTTPException
+from fastapi import FastAPI, Cookie, Depends, Query, Request, status, HTTPException, Response
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 from fastapi.templating import Jinja2Templates
@@ -506,7 +506,7 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
 
 # 代码解释器插件
 import interpreter
-interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
+interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
 interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
 interpreter.auto_run = True # Don't require user confirmation
 interpreter.conversation_history = True  # To store history
@@ -515,10 +515,11 @@ interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interprete
 interpreter.system_message += "\nRun all shell commands with -y."
 
 # 代码解释
-@app.post("/interpreter_chat")
+@app.get("/interpreter_chat")
 def update_chat_issue(chat: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
-    return interpreter.chat(chat, display=False)
+    return Response(interpreter.chat(chat, stream=True, display=False), media_type="text/event-stream")
+    # return interpreter.chat(chat, display=False)
 
 
 if __name__ == "__main__":
