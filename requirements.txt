@@ -14,7 +14,8 @@ python-jose[cryptography]
 passlib[bcrypt]
 SQLAlchemy==1.4.48
 psycopg2==2.9.7
-open-interpreter==0.1.8
+pysqlite3-binary
+open-interpreter==0.1.10
 
 # # 代码解释其依赖包
 pandas

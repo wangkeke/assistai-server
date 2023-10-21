@@ -525,5 +525,8 @@ def update_chat_issue(chat: str, current_user: Annotated[schemas.User, Depends(g
 
 
 if __name__ == "__main__":
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
