@@ -506,7 +506,7 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
 
 # 代码解释器插件
 import interpreter
-interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
+interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
 interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
 interpreter.auto_run = True # Don't require user confirmation
 interpreter.conversation_history = True  # To store history
