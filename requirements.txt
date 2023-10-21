@@ -2,7 +2,7 @@ fastapi==0.98.0
 pydantic[email]==1.10.9
 uvicorn==0.22.0
 faiss-cpu==1.7.4
-openai==0.27.8
+openai==0.28.1
 Jinja2==3.1.2
 starlette==0.27.0
 requests==2.31.0
@@ -15,4 +15,4 @@ passlib[bcrypt]
 itsdangerous
 SQLAlchemy==1.4.48
 psycopg2==2.9.7
-open-interpreter
+open-interpreter==0.1.10
