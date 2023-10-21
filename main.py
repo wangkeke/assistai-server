@@ -508,7 +508,6 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-print(f"++++++++++++++++++++++++++ sys.modules['sqlite3'] = {sys.modules['sqlite3']} ")
 import interpreter
 interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
 interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
@@ -521,17 +520,15 @@ The file name must be in the format of uuid + extension."""
 
 # 代码解释
 @app.get("/interpreter_chat")
-def update_chat_issue(chat: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
-    return interpreter.chat(chat)
-    # return interpreter.chat(chat, display=False)
+    def stream_response(message: str):
+        yield dict(event='start', data= "")
+        for chunk in interpreter.chat(message, stream=True, display=False):
+            yield dict(event='stream', data= jsonable_encoder(chunk))
+    return EventSourceResponse(stream_response(message=message)) 
 
 
 if __name__ == "__main__":
-    __import__('pysqlite3')
-    import pysqlite3
-    import sys
-    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-    print(f"===================== sys.modules['sqlite3'] = {sys.modules['sqlite3']} ")
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
