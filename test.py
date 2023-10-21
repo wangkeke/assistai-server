@@ -14,3 +14,9 @@ from datetime import date, datetime
 # os.makedirs(f"/home/data/images", exist_ok=True)
 
 print(date.today())
+
+chunk = {"message": "a"}
+
+print(list(chunk.keys())[0])
+
+print(chunk.get(list(chunk.keys())[0]))

@@ -528,7 +528,7 @@ def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depend
         collected_messages = []
         yield dict(event='start', data= "")
         for chunk in interpreter.chat(message, stream=True, display=False):
-            collected_messages.append(chunk[next(iter(chunk))])
+            collected_messages.append(chunk.get(list(chunk.keys())[0]))
             yield dict(event='stream', data = jsonable_encoder(chunk))
         yield dict(event='end', data = "".join(collected_messages))
     
