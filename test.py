@@ -15,8 +15,8 @@ from datetime import date, datetime
 
 print(date.today())
 
-chunk = {"message": "a"}
+chunk = {"message": True}
 
 print(list(chunk.keys())[0])
 
-print(chunk.get(list(chunk.keys())[0]))
+print(str(chunk.get(list(chunk.keys())[0])))
