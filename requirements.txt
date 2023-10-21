@@ -74,7 +74,6 @@ decorator==4.4.2
 defusedxml==0.7.1
 deprecat==2.1.1
 dill==0.3.6
-distro-info==0.23ubuntu1
 dlib==19.22.1
 docx2txt==0.8
 ebcdic==1.1.1
