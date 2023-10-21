@@ -32,7 +32,8 @@ interpreter.conversation_history = True  # To store history
 interpreter.temperature = 0.7
 interpreter.context_window = 16000
 interpreter.max_tokens = 5000
-interpreter.system_message += "\nAll dependencies are installed."
+# interpreter.system_message += "\nAll dependencies are installed."
+interpreter.system_message += "\nRun all shell commands with -y."
 interpreter.conversation_filename = f"1.json"
 
 interpreter.chat()

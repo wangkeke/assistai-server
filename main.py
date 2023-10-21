@@ -30,7 +30,7 @@ MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 DISK_PATH = os.getenv("DISK_PATH", "/home/data")
 # 默认，免费用户每日请求最大次数
-DEFAULT_REQUEST_PER_DAY = 3
+DEFAULT_REQUEST_PER_DAY = 2
 
 # 配置日志
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
@@ -512,6 +512,7 @@ interpreter.auto_run = True # Don't require user confirmation
 interpreter.conversation_history = True  # To store history
 interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
 # interpreter.system_message += "\nAll shell are installed."
+interpreter.system_message += "\nRun all shell commands with -y."
 
 # 代码解释
 @app.post("/interpreter_chat")
