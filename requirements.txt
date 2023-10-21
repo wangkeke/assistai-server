@@ -23,6 +23,7 @@ pandas
 openpyxl
 Pillow
 numpy
+matplotlib
 
 # absl-py==1.4.0
 # affine==2.4.0

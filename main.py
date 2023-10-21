@@ -526,16 +526,11 @@ def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depend
     interpreter.conversation_filename = f"{current_user.id}.json"
     def stream_response(message: str):
         collected_messages = []
+        yield dict(event='start', data= "")
         for chunk in interpreter.chat(message, stream=True, display=False):
-            if chunk.get("start_of_message"):
-                yield dict(event='start', data= "")
-            elif chunk.get("end_of_message"):
-                yield dict(event='end', data = "".join(collected_messages))
-            elif chunk.get("message"):
-                collected_messages.append(chunk.get("message"))
-                yield dict(event='stream', data = chunk.get("message"))
-            else:
-                yield dict(event='stream', data = jsonable_encoder(chunk))
+            collected_messages.append(chunk[next(iter(chunk))])
+            yield dict(event='stream', data = jsonable_encoder(chunk))
+        yield dict(event='end', data = "".join(collected_messages))
     
     return EventSourceResponse(stream_response(message=message)) 
 
