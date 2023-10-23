@@ -30,6 +30,8 @@ MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 DISK_PATH = os.getenv("DISK_PATH", "/home/data")
 DEFAULT_TEMP_PATH = os.getenv("DEFAULT_TEMP_PATH", "/opt/render/project/src")
+if not os.path.exists(DEFAULT_TEMP_PATH):
+    os.makedirs(DEFAULT_TEMP_PATH)
 # 默认，免费用户每日请求最大次数
 DEFAULT_REQUEST_PER_DAY = 2
 
@@ -507,9 +509,9 @@ def update_chat_issue(issue_update: schemas.TopicChatIssueUpdate, current_user: 
 
 
 # 代码解释器插件
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import interpreter
 interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
 interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
@@ -522,7 +524,7 @@ Use a random uuid to generate the file name."""
 
 # 代码解释
 @app.post("/interpreter_chat")
-def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+def interpreter_chat(message: str, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     interpreter.conversation_filename = f"{current_user.id}.json"
     def stream_response(message: str):
         collected_messages = []
@@ -533,6 +535,30 @@ def update_chat_issue(message: str, current_user: Annotated[schemas.User, Depend
         yield dict(event='end', data = "".join(collected_messages))
     
     return EventSourceResponse(stream_response(message=message)) 
+
+# openai代理
+@app.post("/openai_agent")
+async def openai_agent(request: Request):
+    json_data = await request.json()
+    model = json_data['model']
+    messages = json_data['messages']
+    functions = json_data['functions']
+    function_call = json_data['function_call']
+    if not functions:
+        return openai.ChatCompletion.create(
+            model = model, 
+            api_key = interpreter.api_key,
+            messages = messages
+        )
+    else:
+        return openai.ChatCompletion.create(
+            model=model,
+            api_key = interpreter.api_key,
+            messages=messages,
+            functions=functions,
+            function_call=function_call,  # auto is default, but we'll be explicit
+        )
+
 
 
 if __name__ == "__main__":
