@@ -80,7 +80,7 @@ cryptography
 cssselect2
 cycler
 cymem
-dbus-python
+# dbus-python
 debugpy
 decorator
 defusedxml
