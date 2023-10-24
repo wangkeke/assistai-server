@@ -513,8 +513,10 @@ __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import interpreter
-interpreter.api_key = os.getenv("INTERPRETER_API_KEY", "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")
-interpreter.model = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
+INTERPRETER_API_KEY = os.getenv("INTERPRETER_API_KEY", "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")
+INTERPRETER_MODEL = os.getenv("INTERPRETER_MODEL", "gpt-3.5-turbo-0613")
+interpreter.api_key = INTERPRETER_API_KEY
+interpreter.model = INTERPRETER_MODEL
 interpreter.auto_run = True # Don't require user confirmation
 interpreter.conversation_history = True  # To store history
 interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
@@ -540,20 +542,23 @@ def interpreter_chat(message: str, current_user: Annotated[schemas.User, Depends
 @app.post("/openai_agent")
 async def openai_agent(request: Request):
     json_data = await request.json()
-    model = json_data['model']
+    model_name = json_data['model']
     messages = json_data['messages']
     if json_data.get("functions"):
+        function_call = "auto"
+        if json_data.get("function_call"):
+            function_call = json_data.get("function_call")
         return openai.ChatCompletion.create(
-            model=model,
-            api_key = interpreter.api_key,
+            model = model_name,
+            api_key = INTERPRETER_API_KEY,
             messages=messages,
             functions=json_data.get("functions"),
-            function_call=json_data.get("function_call"),  # auto is default, but we'll be explicit
+            function_call=function_call,  # auto is default, but we'll be explicit
         )
     else:
         return openai.ChatCompletion.create(
-            model = model, 
-            api_key = interpreter.api_key,
+            model = model_name, 
+            api_key = INTERPRETER_API_KEY,
             messages = messages
         )
 
