@@ -539,7 +539,7 @@ def interpreter_chat(message: str, current_user: Annotated[schemas.User, Depends
     return EventSourceResponse(stream_response(message=message)) 
 
 # openai代理
-@app.post("/openai_agent")
+@app.post("/openai_agent/chat/completions")
 async def openai_agent(request: Request):
     json_data = await request.json()
     model_name = json_data['model']

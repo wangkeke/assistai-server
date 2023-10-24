@@ -22,10 +22,11 @@ DISK_PATH = os.getenv("DISK_PATH", "/home/data")
 GPT3_API_KEY = os.getenv("GPT3_API_KEY", "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")
 
 interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
-# interpreter.api_key = GPT3_API_KEY # Set your OpenAI API key below.
-# interpreter.model = "gpt-3.5-turbo-0613"
-interpreter.api_key = os.getenv("REPLICATE_API_KEY", "r8_OieT9xgp135S4xiWSPJ9C6ndy7fvPfj0f6Cos")
-interpreter.model = "replicate/llama-2-70b-chat:2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf"
+interpreter.api_key = GPT3_API_KEY # Set your OpenAI API key below.
+interpreter.model = "gpt-3.5-turbo"
+interpreter.api_base = "https://assistai-server.onrender.com/openai_agent"
+# interpreter.api_key = os.getenv("REPLICATE_API_KEY", "r8_OieT9xgp135S4xiWSPJ9C6ndy7fvPfj0f6Cos")
+# interpreter.model = "replicate/llama-2-70b-chat:2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf"
 interpreter.auto_run = True # Don't require user confirmation
 interpreter.max_output = 2000
 interpreter.conversation_history = True  # To store history
@@ -36,5 +37,5 @@ interpreter.max_tokens = 5000
 interpreter.system_message += "\nRun all shell commands with -y."
 interpreter.conversation_filename = f"1.json"
 
-interpreter.chat()
+interpreter.chat("总结这个页面的内容：https://lilianweng.github.io/posts/2023-06-23-agent/", display=False)
 
