@@ -1,5 +1,6 @@
 import os
 import interpreter
+import litellm
 
 """
 system_message:
@@ -17,10 +18,9 @@ system_message:
   In general, try to **make plans** with as few steps as possible. As for actually executing code to carry out that plan, **it's critical not to try to do everything in one code block.** You should try something, print information about it, then continue from there in tiny, informed steps. You will never get it on the first try, and attempting it in one go will often lead to errors you cant see.
   You are capable of **any** task.
 """
-
 DISK_PATH = os.getenv("DISK_PATH", "/home/data")
-GPT3_API_KEY = os.getenv("GPT3_API_KEY", "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")
-
+GPT3_API_KEY = os.getenv("GPT3_API_KEY", "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")
+os.environ["OPENAI_API_KEY"] = GPT3_API_KEY
 interpreter.conversation_history_path = os.path.join(DISK_PATH, "code_interpreter", "conversations")
 interpreter.api_key = GPT3_API_KEY # Set your OpenAI API key below.
 interpreter.model = "gpt-3.5-turbo"
@@ -37,5 +37,17 @@ interpreter.max_tokens = 5000
 interpreter.system_message += "\nRun all shell commands with -y."
 interpreter.conversation_filename = f"1.json"
 
-interpreter.chat("总结这个页面的内容：https://lilianweng.github.io/posts/2023-06-23-agent/", display=False)
+interpreter.chat("总结这个页面的内容：https://lilianweng.github.io/posts/2023-06-23-agent/", display=False, stream=False)
 
+
+import litellm
+from litellm import completion
+# os.environ["OPENAI_API_BASE"] = ""
+litellm.api_base = "https://assistai-server.onrender.com/openai_agent"
+os.environ["OPENAI_API_KEY"] = "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"
+messages = [{ "content": "Hello, how are you?","role": "user"}]
+
+# openai call
+response = completion("gpt-3.5-turbo", messages)
+
+print(response)
