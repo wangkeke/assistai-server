@@ -44,7 +44,7 @@ audioread
 babel
 backcall
 backoff
-backports.zoneinfo
+# backports.zoneinfo
 # basemap-data
 basemap-data
 # basemap
