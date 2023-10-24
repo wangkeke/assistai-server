@@ -542,21 +542,19 @@ async def openai_agent(request: Request):
     json_data = await request.json()
     model = json_data['model']
     messages = json_data['messages']
-    functions = json_data['functions']
-    function_call = json_data['function_call']
-    if not functions:
-        return openai.ChatCompletion.create(
-            model = model, 
-            api_key = interpreter.api_key,
-            messages = messages
-        )
-    else:
+    if json_data.get("functions"):
         return openai.ChatCompletion.create(
             model=model,
             api_key = interpreter.api_key,
             messages=messages,
-            functions=functions,
-            function_call=function_call,  # auto is default, but we'll be explicit
+            functions=json_data.get("functions"),
+            function_call=json_data.get("function_call"),  # auto is default, but we'll be explicit
+        )
+    else:
+        return openai.ChatCompletion.create(
+            model = model, 
+            api_key = interpreter.api_key,
+            messages = messages
         )
 
 
