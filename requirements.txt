@@ -18,7 +18,7 @@ pysqlite3-binary
 open-interpreter==0.1.10
 
 # # 代码解释其依赖包
-wheel
+# wheel
 Pillow
 absl-py
 affine
@@ -71,7 +71,7 @@ cryptography
 cssselect2
 cycler
 cymem
-dbus-python
+# dbus-python
 debugpy
 decorator
 defusedxml
