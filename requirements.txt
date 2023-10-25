@@ -343,8 +343,8 @@ theano-pymc
 threadpoolctl
 tifffile
 tinycss2
-# toml
-# tomli
+toml
+tomli
 # toolz
 toolz
 torch
