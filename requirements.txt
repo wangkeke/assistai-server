@@ -17,8 +17,7 @@ psycopg2==2.9.7
 pysqlite3-binary
 open-interpreter==0.1.10
 
-# # 代码解释其依赖包
-# wheel
+# 代码解释器依赖包
 Pillow
 absl-py
 affine
@@ -39,7 +38,7 @@ audioread
 babel
 backcall
 backoff
-backports.zoneinfo
+# backports.zoneinfo
 basemap-data
 basemap
 bcrypt
