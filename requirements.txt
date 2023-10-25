@@ -229,7 +229,7 @@ pydub
 pydyf
 pygments
 # pygobject
-pygraphviz
+# pygraphviz
 pylog
 pyluach
 pymc3
