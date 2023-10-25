@@ -76,7 +76,7 @@ decorator
 defusedxml
 deprecat
 dill
-dlib
+# dlib
 docx2txt
 ebcdic
 ebooklib
