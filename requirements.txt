@@ -220,7 +220,7 @@ pure-eval
 py
 toml
 tomli
-pyaudio
+# pyaudio
 pycountry
 pycparser
 pycryptodome
@@ -228,7 +228,7 @@ pydot
 pydub
 pydyf
 pygments
-pygobject
+# pygobject
 pygraphviz
 pylog
 pyluach
