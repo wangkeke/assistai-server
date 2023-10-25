@@ -242,6 +242,8 @@ psutil
 ptyprocess
 pure-eval
 py
+toml
+tomli
 pyaudio
 pycountry
 pycparser
@@ -343,8 +345,6 @@ theano-pymc
 threadpoolctl
 tifffile
 tinycss2
-toml
-tomli
 # toolz
 toolz
 torch
