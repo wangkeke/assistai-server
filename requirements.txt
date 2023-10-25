@@ -15,16 +15,11 @@ passlib[bcrypt]
 SQLAlchemy==1.4.48
 psycopg2==2.9.7
 pysqlite3-binary
-# google-colab
 open-interpreter==0.1.10
 
 # # 代码解释其依赖包
-pandas
-openpyxl
+wheel
 Pillow
-numpy
-matplotlib
-
 absl-py
 affine
 aiofiles
@@ -44,10 +39,8 @@ audioread
 babel
 backcall
 backoff
-# backports.zoneinfo
-# basemap-data
+backports.zoneinfo
 basemap-data
-# basemap
 basemap
 bcrypt
 beautifulsoup4
@@ -60,18 +53,16 @@ brotli
 cachetools
 cairocffi
 cairosvg
-# camelot-py
 camelot-py
 catalogue
 certifi
 cffi
-# chardet
+chardet
 charset-normalizer
 click-plugins
 click
 cligj
 cloudpickle
-# cmudict
 cmudict
 comm
 compressed-rtf
@@ -80,13 +71,13 @@ cryptography
 cssselect2
 cycler
 cymem
-# dbus-python
+dbus-python
 debugpy
 decorator
 defusedxml
 deprecat
 dill
-# dlib
+dlib
 docx2txt
 ebcdic
 ebooklib
@@ -102,7 +93,6 @@ fastprogress
 ffmpeg-python
 ffmpy
 filelock
-# fiona
 fiona
 flask-cachebuster
 flask-cors
@@ -124,7 +114,6 @@ gtts
 h11
 h2
 h5netcdf
-# h5py
 h5py
 hpack
 html5lib
@@ -163,15 +152,10 @@ llvmlite
 loguru
 lxml
 markdown2
-# markdownify
 markdownify
-# markupsafe
 markupsafe
-# matplotlib-inline
 matplotlib-inline
-# matplotlib-venn
 matplotlib-venn
-# matplotlib
 matplotlib
 mistune
 mizani
@@ -185,7 +169,6 @@ munch
 murmurhash
 mutagen
 nashpy
-# nbclassic
 nbclassic
 nbclient
 nbconvert
@@ -193,9 +176,7 @@ nbformat
 nest-asyncio
 networkx
 nltk
-# notebook-shim
 notebook-shim
-# notebook
 notebook
 numba
 numexpr
@@ -203,12 +184,10 @@ numpy-financial
 numpy
 odfpy
 olefile
-# opencv-python
 opencv-python
 openpyxl
 opt-einsum
 packaging
-# pandas
 pandas
 pandocfilters
 paramiko
@@ -217,10 +196,8 @@ pathy
 patsy
 pdf2image
 pdfkit
-# pdfminer.six
-# pdfplumber
+pdfminer.six
 pdfplumber
-# pdfrw
 pdfrw
 pexpect
 pickleshare
@@ -244,7 +221,7 @@ pure-eval
 py
 toml
 tomli
-# pyaudio
+pyaudio
 pycountry
 pycparser
 pycryptodome
@@ -252,11 +229,10 @@ pydot
 pydub
 pydyf
 pygments
-# pygobject
-# pygraphviz
+pygobject
+pygraphviz
 pylog
 pyluach
-# pymc3
 pymc3
 pymupdf
 pynacl
@@ -271,9 +247,7 @@ pyshp
 pyswisseph
 pytesseract
 pytest
-# pyth3
 pyth3
-# python-apt
 python-dateutil
 python-docx
 python-pptx
@@ -282,21 +256,18 @@ pytz-deprecation-shim
 pytz
 pywavelets
 pyxlsb
-# pyyaml
+pyyaml
 pyzbar
 pyzmq
 qrcode
 quart
 rarfile
-# rasterio
 rasterio
 rdflib
 regex
 reportlab
 requests-unixsocket
 resampy
-# scikit-image
-# scikit-learn
 scikit-image
 scikit-learn
 scipy
@@ -304,14 +275,9 @@ seaborn
 semver
 send2trash
 sentencepiece
-# setuptools
 setuptools
 shap
-# shapely
 shapely
-# six
-# six
-# six
 slicer
 smart-open
 sniffio
@@ -321,17 +287,14 @@ soundfile
 soupsieve
 spacy-legacy
 spacy-legacy
-# spacy
 spacy
 speechrecognition
 srsly
 stack-data
-# statsmodels
 statsmodels
 svglib
 svgwrite
 sympy
-# tables
 tables
 tabula
 tabulate
@@ -339,13 +302,12 @@ tenacity
 terminado
 text-unidecode
 textblob
-# textract
+textract
 theano-pymc
-# thinc
+thinc
 threadpoolctl
 tifffile
 tinycss2
-# toolz
 toolz
 torch
 torchaudio
@@ -355,14 +317,10 @@ tornado
 tqdm
 traitlets
 trimesh
-# typer
 typer
-# typing-extensions
 typing-extensions
 tzdata
-# tzlocal
 tzlocal
-# unattended-upgrades
 urllib3
 wand
 wasabi
@@ -385,3 +343,4 @@ xml-python
 yarl
 zipp
 zopfli
+six
