@@ -71,7 +71,7 @@ class TopicChatIssueBase(BaseModel):
     detail: str
 
 class TopicChatIssueCreate(TopicChatIssueBase):
-    topic_chat_id: int
+    pass
 
 class TopicChatIssueUpdate(TopicChatIssueBase):
     id: int

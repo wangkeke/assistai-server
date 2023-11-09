@@ -114,8 +114,8 @@ def remove_topic_chat(db: Session, topic_id: str, chat_id: int):
     db.query(models.TopicChat).filter(models.TopicChat.topic_id==topic_id, models.TopicChat.id==chat_id, models.TopicChat.flag == True).update({"flag": False})
     # db.commit()
 
-def create_topic_chat_issue(db: Session, user_id: int, topic_chat_issue: schemas.TopicChatIssueCreate):
-    db_topic_chat_issue = models.TopicChatIssue(**topic_chat_issue.dict(), user_id=user_id, create_time=datetime.now())
+def create_topic_chat_issue(db: Session, user_id: int, chat_id: int, topic_chat_issue: schemas.TopicChatIssueCreate):
+    db_topic_chat_issue = models.TopicChatIssue(**topic_chat_issue.dict(), topic_chat_id=chat_id, user_id=user_id, create_time=datetime.now())
     db.add(db_topic_chat_issue)
     db.commit()
     db.refresh(db_topic_chat_issue)
