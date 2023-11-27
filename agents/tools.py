@@ -1,17 +1,23 @@
 import os
-import urllib
+import urllib.request
 import uuid
 from agents.core import client
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 # 图像生成
 def generate_image(args: dict):
     """Use Dall-E-3 to generate an image for the user"""
     prompt: str = args.get("prompt")
     response = client.images.generate(
-        model="dall-e-3",
+        model="dall-e-2",
         prompt=prompt,
-        size="1024x1024",
-        quality="standard",
+        # size="1024x1024",
+        # quality="standard",
         n=1,
     )
     image_url = response.data[0].url
@@ -21,7 +27,8 @@ def generate_image(args: dict):
     data_path = os.getenv("DATA_PATH")
     os.makedirs(f"{data_path}/images", exist_ok=True)
     image_path = f"/images/{str(uuid.uuid4())}.webp"
-    with urllib.request.urlopen(image_url) as response:
+    print(f"image_url = {image_url}")
+    with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
     return f'![{revised_prompt}]({os.environ.get("DOMAIN_NAME")}/api{image_path} "{prompt}")'
