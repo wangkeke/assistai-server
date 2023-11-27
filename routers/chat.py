@@ -80,7 +80,7 @@ def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user
                     attach_content.append(f"{i}. {attach.file_url}")
                 content += "\n".join(attach_content)
             messages.append({"role": role, "content": content})
-        response = chat_completion(chats=messages)
+        response = chat_completion(messages)
         crud.increase_user_chat_stats(db, id=user_chat_stats.id)
         assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(**response), topic_id=topic_id)
         return EventSourceResponse(event_publisher(response, chat_id=assistant_chat.id, stats_count=rpd_amount - user_chat_stats.stats_value - 1))
