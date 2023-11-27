@@ -107,6 +107,12 @@ class TopicChat(TopicChatBase):
     class Config:
         orm_mode = True
 
+class TopicChatExtend(BaseModel):
+    topic_chat: TopicChat
+    remain_count: int = None
+    class Config:
+        orm_mode = True
+
 class Topic(TopicBase):
     id: str
     last_active_time: datetime = None

@@ -64,7 +64,7 @@ async def event_publisher(message, chat_id: int, stats_count: int):
     yield dict(event='end', data=json.dumps({"chat_id" : chat_id, "remain_num": stats_count}))
 
 # 聊天交互接口
-@router.post("/{topic_id}/conversation")
+@router.post("/{topic_id}/conversation", response_model=schemas.TopicChatExtend)
 def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
@@ -81,34 +81,36 @@ def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user
                 content += "\n".join(attach_content)
             messages.append({"role": role, "content": content})
         response = chat_completion(messages)
-        crud.increase_user_chat_stats(db, id=user_chat_stats.id)
-        
         assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(**response), topic_id=topic_id)
-        return EventSourceResponse(event_publisher(response, chat_id=assistant_chat.id, stats_count=rpd_amount - user_chat_stats.stats_value - 1))
-    except Exception as e: 
-        print(e)
-        raise HTTPException(status_code=500, detail=e.__cause__)
+        return schemas.TopicChatExtend(topic_chat=assistant_chat, remain_count=rpd_amount - user_chat_stats.stats_value - 1)
+        # return EventSourceResponse(event_publisher(response, chat_id=assistant_chat.id, stats_count=rpd_amount - user_chat_stats.stats_value))
+    finally: 
+        crud.increase_user_chat_stats(db, id=user_chat_stats.id)
 
 # 聊天交互测试接口
-@router.post("/{topic_id}/conversation_test")
+@router.post("/{topic_id}/conversation_test", response_model=schemas.TopicChatExtend)
 def chats(topic_id: str, chat_creates: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
-        def text_event_publisher(db: Session, topic_id: str, stats_count: int):
-            collected_messages = []
-            role = "assistant"
-            testValue = "下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\n def fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n\n "
-            # testValue = "## Tables\n\n| Option | Description |\n| ------ | ----------- |\n| data   | path to data files to supply the data that will be passed into templates. |\n| engine | engine to be used for processing templates. Handlebars is the default. |\n| ext    | extension to be used for dest files. |\n\n"
-            # testValue = "1. First ordered list item\n2. Another item\n⋅⋅* Unordered sub-list.\n1. Actual numbers don't matter, just that it's a number\n⋅⋅1. Ordered sub-list\n4. And another item.⋅⋅⋅You can have properly indented paragraphs within list items.\n\n⋅⋅⋅To have a line break without a paragraph, you will need to use two trailing spaces.⋅⋅\n\n"
-            # testValue = 'Inline-style:![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")\n\n'
-            yield dict(event='start', data= role)
-            for i in range(len(testValue)):
-                collected_messages.append(testValue[i])
-                yield dict(event='stream', data=testValue[i].replace('\n', '\\n'))
-            content = ''.join(collected_messages)
-            assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=content), topic_id=topic_id)
-            yield dict(event='end', data=json.dumps({"chat_id" : assistant_chat.id, "remain_num": stats_count}))
-        return EventSourceResponse(text_event_publisher(db=db, topic_id=topic_id, stats_count=rpd_amount - user_chat_stats.stats_value - 1))
+        role = "assistant"
+        testValue = "下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\n def fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n\n "
+        # def text_event_publisher(db: Session, topic_id: str, stats_count: int):
+        #     collected_messages = []
+        #     role = "assistant"
+        #     testValue = "下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\n def fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n\n "
+        #     # testValue = "## Tables\n\n| Option | Description |\n| ------ | ----------- |\n| data   | path to data files to supply the data that will be passed into templates. |\n| engine | engine to be used for processing templates. Handlebars is the default. |\n| ext    | extension to be used for dest files. |\n\n"
+        #     # testValue = "1. First ordered list item\n2. Another item\n⋅⋅* Unordered sub-list.\n1. Actual numbers don't matter, just that it's a number\n⋅⋅1. Ordered sub-list\n4. And another item.⋅⋅⋅You can have properly indented paragraphs within list items.\n\n⋅⋅⋅To have a line break without a paragraph, you will need to use two trailing spaces.⋅⋅\n\n"
+        #     # testValue = 'Inline-style:![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")\n\n'
+        #     yield dict(event='start', data= role)
+        #     for i in range(len(testValue)):
+        #         collected_messages.append(testValue[i])
+        #         yield dict(event='stream', data=testValue[i].replace('\n', '\\n'))
+        #     content = ''.join(collected_messages)
+        #     assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=content), topic_id=topic_id)
+        #     yield dict(event='end', data=json.dumps({"chat_id" : assistant_chat.id, "remain_num": stats_count}))
+        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=testValue), topic_id=topic_id)
+        return schemas.TopicChatExtend(topic_chat=assistant_chat, remain_count=rpd_amount - user_chat_stats.stats_value - 1)
+        # return EventSourceResponse(text_event_publisher(db=db, topic_id=topic_id, stats_count=rpd_amount - user_chat_stats.stats_value))
     finally: 
         crud.increase_user_chat_stats(db, id=user_chat_stats.id)
         
