@@ -31,7 +31,7 @@ def generate_image(args: dict):
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
-    return f'![{revised_prompt}]({os.environ.get("DOMAIN_NAME")}/api{image_path} "{prompt}")'
+    return f'![{revised_prompt}]({os.environ.get("DOMAIN_NAME")}/api/static{image_path} "{prompt}")'
 
 
 def understanding_image(args: dict):
@@ -86,10 +86,10 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "prompt": {"type": "string", "description": "How to understand user prompts for images"},
+                    "prompt": {"type": "string", "description": "Text content in user messages"},
                     "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for user images"}
                 },
-                "required": ["image_urls"],
+                "required": ["prompt","image_urls"],
             },
         }
     },
