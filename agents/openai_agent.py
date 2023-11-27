@@ -4,7 +4,7 @@ from agents.core import client
 from agents.tools import tools, tool_functions
 
 
-def chat_completion(messages: list[dict], turn_count: int = 0):
+def chat_completion(messages: list[dict]):
     model_name = os.environ.get("MODEL_NAME")
     response = client.chat.completions.create(
         model=model_name,
@@ -15,7 +15,7 @@ def chat_completion(messages: list[dict], turn_count: int = 0):
     response_message = response.choices[0].message
     tool_calls = response_message.tool_calls
     # Step 2: check if the model wanted to call a function
-    if tool_calls and turn_count < len(tool_calls)+1:
+    if tool_calls:
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
         messages.append(response_message)  # extend conversation with assistant's reply
@@ -33,7 +33,11 @@ def chat_completion(messages: list[dict], turn_count: int = 0):
                     "content": function_response,
                 }
             )  # extend conversation with function response
-        turn_count += 1
-        return chat_completion(messages=messages, turn_count=turn_count)
+        second_response = client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+        )  # get a new response from the model where it can see the function response
+        second_response_message = second_response.choices[0].message
+        return {"role": second_response_message.role, "content": second_response_message.content}
     else:
         return {"role": response_message.role, "content": response_message.content}
