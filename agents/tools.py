@@ -15,8 +15,8 @@ def generate_image(args: dict):
         n=1,
     )
     image_url = response.data[0].url
-    revised_prompt = response.data[0].get("revised_prompt")
-    if not revised_prompt:
+    revised_prompt = prompt
+    if response.data[0].revised_prompt:
         revised_prompt = prompt
     data_path = os.getenv("DATA_PATH")
     os.makedirs(f"{data_path}/images", exist_ok=True)
