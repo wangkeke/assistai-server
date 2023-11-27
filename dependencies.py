@@ -14,7 +14,8 @@ def get_db():
     try:
         yield db
         db.commit()
-    except Exception:
+    except Exception as e:
+        print(e)
         db.rollback()
     finally:
         db.close()

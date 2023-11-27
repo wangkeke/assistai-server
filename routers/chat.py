@@ -85,7 +85,7 @@ def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user
         assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(**response), topic_id=topic_id)
         return EventSourceResponse(event_publisher(response, chat_id=assistant_chat.id, stats_count=rpd_amount - user_chat_stats.stats_value - 1))
     except Exception as e: 
-        log.error("Service internal error，cause reason: %s", e.__cause__)
+        print(e)
         raise HTTPException(status_code=500, detail=e.__cause__)
 
 # 聊天交互测试接口
