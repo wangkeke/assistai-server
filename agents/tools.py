@@ -13,6 +13,7 @@ ctx.verify_mode = ssl.CERT_NONE
 def generate_image(args: dict):
     """Use Dall-E-3 to generate an image for the user"""
     prompt: str = args.get("prompt")
+    print(f"generate_image tool args is : {args}")
     response = client.images.generate(
         model="dall-e-3",
         prompt=prompt,
@@ -27,7 +28,6 @@ def generate_image(args: dict):
     data_path = os.getenv("DATA_PATH")
     os.makedirs(f"{data_path}/images", exist_ok=True)
     image_path = f"/images/{str(uuid.uuid4())}.webp"
-    print(f"image_url = {image_url}")
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
