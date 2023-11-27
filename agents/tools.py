@@ -14,10 +14,10 @@ def generate_image(args: dict):
     """Use Dall-E-3 to generate an image for the user"""
     prompt: str = args.get("prompt")
     response = client.images.generate(
-        model="dall-e-2",
+        model="dall-e-3",
         prompt=prompt,
-        # size="1024x1024",
-        # quality="standard",
+        size="1024x1024",
+        quality="standard",
         n=1,
     )
     image_url = response.data[0].url
@@ -31,7 +31,7 @@ def generate_image(args: dict):
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
-    return f'Generated image: {os.environ.get("DOMAIN_NAME")}/api/static/{image_path}'
+    return f'![{revised_prompt}]({os.environ.get("DOMAIN_NAME")}/api{image_path} "{prompt}")'
 
 
 def understanding_image(args: dict):
