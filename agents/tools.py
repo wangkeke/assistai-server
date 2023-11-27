@@ -54,7 +54,7 @@ def understanding_image(args: dict):
             }
         ],
     )
-    return response.choices[0].message
+    return response.choices[0].message.content
 
 tool_functions = {
     generate_image.__name__ : generate_image,
