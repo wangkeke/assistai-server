@@ -33,13 +33,13 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         if not user or not pwd_context.verify(form_data.password, user.password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="用户名或密码错误",
+                detail="Email or password is incorrect.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         if user.disabled: 
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="账户已被停用",
+                detail="Email has been disabled.",
             )
         access_token_expires = timedelta(minutes=5 * 24 * 60)
         access_token = create_access_token(
@@ -52,8 +52,8 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 async def send_email_captcha(to_email: str):
     # 生成6位随机验证码  
     code = random.randint(100000, 999999)
-    msg = MIMEText(f"您的验证码是：{code}", 'plain', 'utf-8')
-    msg['Subject'] = f"您的验证码是：{code}"
+    msg = MIMEText(f"Your verification code is {code}", 'plain', 'utf-8')
+    msg['Subject'] = f"Your verification code is {code}"
     msg['From'] = EMAIL_SENDER
     msg['To'] = to_email
     # 发送邮件
@@ -78,7 +78,7 @@ async def send_email_regist_code(request: Request, send_email: schemas.SendEmail
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="邮箱已被注册"
+            detail="Email has been registered."
         )
     try:
         code = await send_email_captcha(to_email=send_email.email)
@@ -86,7 +86,7 @@ async def send_email_regist_code(request: Request, send_email: schemas.SendEmail
     except smtplib.SMTPException as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="验证码发送失败，请检查邮箱是否正确"
+            detail="The verification code failed to be sent, please check whether the email is correct."
         )
 
 # 校验邮箱注册码
@@ -96,12 +96,12 @@ async def verify_email_regist_code(request: Request, verify_email: schemas.Verif
     if not email_code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="邮箱未验证"
+            detail="Email is not verified."
         )
     if email_code.code != verify_email.captcha:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="验证码错误"
+            detail="Regist code error."
         )
     crud.update_email_code(db, email_code_update=schemas.EmailCodeUpdate(email=verify_email.email, id=email_code.id, state=1))
 
@@ -112,13 +112,13 @@ async def regist_user(request: Request, user_create: schemas.UserCreate, db: Ses
     if not email_code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="邮箱未验证"
+            detail="Email is not verified."
         )
     user = crud.get_user_by_username(db, username=user_create.username)
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="邮箱已被注册"
+            detail="Email has been registered."
         )
     user_create.password = pwd_context.hash(user_create.password)
     user = crud.create_user(db, user_create=user_create)
@@ -131,7 +131,7 @@ async def send_email_reset_code(request: Request, send_email: schemas.SendEmail,
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="该邮箱未注册"
+            detail="Email is not registered."
         )
     try:
         code = await send_email_captcha(to_email=send_email.email)
@@ -140,7 +140,7 @@ async def send_email_reset_code(request: Request, send_email: schemas.SendEmail,
         print(e)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="请检查邮箱是否正确"
+            detail="The verification code failed to be sent, please check whether the email is correct."
         )
 
 # 校验邮箱验证码
@@ -150,12 +150,12 @@ async def verify_email_reset_code(request: Request, verify_email: schemas.Verify
     if not email_code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="邮箱未验证"
+            detail="Email is not verified."
         )
     if email_code.code != verify_email.captcha:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="验证码错误"
+            detail="Captcha error."
         )
     crud.update_email_code(db, email_code_update=schemas.EmailCodeUpdate(email=verify_email.email, id=email_code.id, state=1))
 
@@ -166,13 +166,13 @@ async def reset_password(request: Request, user_update: schemas.UserUpdate, db: 
     if not email_code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="邮箱未验证"
+            detail="Email is not verified."
         )
     user = crud.get_user_by_username(db, username=user_update.username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="请检查邮箱是否正确"
+            detail="Email is not registered."
         )
     user_update.password = pwd_context.hash(user_update.password)
     user_update.head_url = None

@@ -79,7 +79,7 @@ def get_topic_by_id(db: Session, user_id: int, topic_id: str):
     return db.query(models.Topic).filter(models.Topic.id==topic_id, models.Topic.user_id==user_id, models.Topic.flag == True).first()
 
 def create_topic(db: Session, topic: schemas.TopicCreate, user_id: int):
-    db_topic = models.Topic(**topic.dict(), id=str(uuid.uuid1()), flag= True, user_id= user_id, create_time=datetime.now(), last_active_time=datetime.now())
+    db_topic = models.Topic(title=topic.title, turn=topic.turn, id=str(uuid.uuid1()), flag= True, user_id= user_id, create_time=datetime.now(), last_active_time=datetime.now())
     db.add(db_topic)
     db.commit()
     db.refresh(db_topic)
@@ -104,11 +104,25 @@ def get_topic_chats(db: Session, topic_id: str, next_chat_id: int = None, limit:
         return db.query(models.TopicChat).filter(models.TopicChat.topic_id==topic_id, models.TopicChat.flag == True).order_by(models.TopicChat.id.desc()).offset(0).limit(limit).all()
 
 def create_topic_chat(db: Session, topic_chat: schemas.TopicChatCreate, topic_id: str, content_type: str = 'text'):
-    topic_chat = models.TopicChat(role=topic_chat.role, content_type=content_type, content=topic_chat.content, topic_id=topic_id, create_time=datetime.now(), flag=True)
+    topic_chat = models.TopicChat(role=topic_chat.role, content_type=content_type, content=topic_chat.content, 
+                                  topic_id=topic_id, 
+                                  create_time=datetime.now(), 
+                                  flag=True
+                                  )
     db.add(topic_chat)
     db.commit()
     db.refresh(topic_chat)
     return topic_chat
+
+def create_topic_chat_attach(db: Session, attachs: list[schemas.TopicChatAttachBase], topic_chat_id: int):
+    topic_chat_attachs = []
+    for item in attachs:
+        model_item = models.TopicChatAttach(**item.dict(), topic_chat_id=topic_chat_id)
+        db.add(model_item)
+        db.commit()
+        db.refresh(model_item)
+        topic_chat_attachs.append(model_item)
+    return topic_chat_attachs
 
 def remove_topic_chat(db: Session, topic_id: str, chat_id: int):
     db.query(models.TopicChat).filter(models.TopicChat.topic_id==topic_id, models.TopicChat.id==chat_id, models.TopicChat.flag == True).update({"flag": False})
@@ -122,8 +136,12 @@ def create_topic_chat_issue(db: Session, user_id: int, chat_id: int, topic_chat_
     return db_topic_chat_issue
 
 def update_topic_chat_issue(db: Session, topic_chat_issue: schemas.TopicChatIssueUpdate):
-    db.query(models.TopicChatIssue).filter(models.TopicChatIssue.id==topic_chat_issue.id).update({"type": topic_chat_issue.type, "detail": topic_chat_issue.detail})
-    # db.commit()
+    topicChatIssue = db.query(models.TopicChatIssue).filter(models.TopicChatIssue.id==topic_chat_issue.id).first()
+    topicChatIssue.type = topic_chat_issue.type
+    topicChatIssue.detail = topic_chat_issue.detail
+    db.commit()
+    db.refresh(topicChatIssue)
+    return topicChatIssue
 
 def create_user_chat_stats(db: Session, user_id: int, user_chat_stats_create: schemas.UserChatStatsCreate):
     db_user_chat_stats = models.UserChatStats(user_id=user_id, stats_date = user_chat_stats_create.stats_date, 

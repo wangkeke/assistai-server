@@ -34,7 +34,19 @@ async def get_topics(current_user: Annotated[schemas.User, Depends(get_current_u
 # 创建话题
 @router.post("/create", response_model=schemas.Topic)
 def create_topic(topic_create: schemas.TopicCreate, current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+    topicChatCreate = None
+    if topic_create.title:
+        topicChatCreate = schemas.TopicChatCreate(role='user', content=topic_create.title)
+    elif len(topic_create.attachs) > 0:
+        topicChatCreate = schemas.TopicChatCreate(role='user', content=None)
+    if not topic_create.title:
+        for attach in topic_create.attachs:
+            topic_create.title = attach.file_name
+            break
     topic = crud.create_topic(db, topic=topic_create, user_id=current_user.id)
+    if topicChatCreate:
+        topic_chat = crud.create_topic_chat(db=db, topic_chat=topicChatCreate, topic_id=topic.id)
+        crud.create_topic_chat_attach(db=db, attachs=topic_create.attachs, topic_chat_id=topic_chat.id)
     return topic
 
 # 更新话题标题
@@ -55,11 +67,13 @@ async def get_topic(topic_id: str, current_user: Annotated[schemas.User, Depends
     if not topic:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="话题不存在或已删除"
+            detail="The topic does not exist or has been deleted"
         )
     return topic
 
 # 查询话题下的聊天记录分页列表
 @router.get("/{topic_id}/chats", response_model=list[schemas.TopicChat])
 async def page_topic_chats(topic_id: str, current_user: Annotated[schemas.User, Depends(get_current_user)], next_chat_id: int = None, limit: int = None, db: Session = Depends(get_db)):
-    return crud.get_topic_chats(db, topic_id=topic_id, next_chat_id=next_chat_id, limit=limit)
+    topic_chats: list = crud.get_topic_chats(db, topic_id=topic_id, next_chat_id=next_chat_id, limit=limit)
+    topic_chats.reverse()
+    return topic_chats

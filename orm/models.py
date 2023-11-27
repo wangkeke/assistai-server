@@ -1,5 +1,4 @@
-from datetime import datetime
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, DateTime, TIMESTAMP, Date
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, DateTime, TIMESTAMP, Date, BigInteger
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -62,7 +61,22 @@ class TopicChat(Base):
     create_time = Column(TIMESTAMP)
     topic_id = Column(String(50), ForeignKey("topic.id"))
     topic = relationship("Topic")
-    topic_chat_issues = relationship("TopicChatIssue", back_populates="topic_chat")
+    attachs: list = relationship("TopicChatAttach", back_populates="topic_chat")
+    topic_chat_issues: list = relationship("TopicChatIssue", back_populates="topic_chat")
+
+class TopicChatAttach(Base):
+    __tablename__ = 'topic_chat_attach'
+    
+    id = Column(Integer, primary_key=True)
+    file_etag = Column(String(255))
+    file_name = Column(String(255))
+    file_size = Column(BigInteger)
+    file_url = Column(String(500))
+    content_type = Column(String(255))
+    file_format = Column(String(20))
+    topic_chat_id = Column(Integer, ForeignKey("topic_chat.id"))
+    topic_chat = relationship("TopicChat", back_populates="attachs")
+
 
 class UserChatStats(Base):
     __tablename__ = 'user_chat_stats'
