@@ -86,7 +86,7 @@ tools = [
                         "description": "The role of the author of this message",
                     },
                     "text": {"type": "string", "description": "Text content in the message"},
-                    "image_urls": {"type": "array", "description": "List of image URLs in the message"}
+                    "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of image URLs in the message"}
                 },
                 "required": ["role","image_urls"],
             },
