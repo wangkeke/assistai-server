@@ -48,7 +48,7 @@ async def upload_file(files: list[UploadFile], current_user: Annotated[schemas.U
         if not os.path.exists(UPLOAD_PATH + user_dir):
             os.makedirs(UPLOAD_PATH + user_dir, exist_ok=True)
         file_etag = str(uuid.uuid4())
-        new_file_name = file_name[:ext_pos] + "_" + file_etag + "." + file_format
+        new_file_name = file_etag + "." + file_format
         with open(UPLOAD_PATH + user_dir + "/" + new_file_name, mode="xb") as f:
             f.write(await file.read())
         if file.content_type.startswith("image/"):    
