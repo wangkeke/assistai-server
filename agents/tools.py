@@ -31,6 +31,7 @@ def understanding_image(args: dict):
     """Use GPT’s visual capabilities to understand multiple images"""
     role: str = args.get("role")
     text: str = args.get("text")
+    print(f"understanding_image args = {args}")
     image_urls: list[str] = args.get("image_urls")
     contents = []
     if text:
