@@ -62,7 +62,7 @@ async def upload_file(files: list[UploadFile], current_user: Annotated[schemas.U
                     new_width = new_width*512/new_height
                     new_height = 512
                 img.resize(size=(int(new_width),int(new_height))).save(UPLOAD_PATH + user_dir + "/" + new_file_name) 
-        file_url = f'/static/upload/{user_dir}/{new_file_name}'
+        file_url = f'/api/static/upload/{user_dir}/{new_file_name}'
         if nginx_prefix:
             file_url = nginx_prefix + file_url
         result.append({
