@@ -36,4 +36,4 @@ def chat_completion(messages: list[dict], turn_count: int = 0):
         turn_count += 1
         return chat_completion(messages=messages, turn_count=turn_count)
     else:
-        return response_message
+        return {"role": response_message.role, "content": response_message.content}
