@@ -35,21 +35,20 @@ def generate_image(args: dict):
 
 
 def understanding_image(args: dict):
-    """Use GPT’s visual capabilities to understand multiple images"""
-    role: str = args.get("role")
-    text: str = args.get("text")
+    """Understanding user images"""
+    prompt: str = args.get("prompt")
     print(f"understanding_image tool args is : {args}")
     image_urls: list[str] = args.get("image_urls")
     contents = []
-    if text:
-        contents.append({"type": "text", "text": text})
+    if prompt:
+        contents.append({"type": "text", "text": prompt})
     for image_url in image_urls:
         contents.append({"type": "image_url", "image_url": image_url})
     response = client.chat.completions.create(
         model="gpt-4-vision-preview",       
         messages=[
             {
-                "role": role,
+                "role": "user",
                 "content": contents,
             }
         ],
@@ -87,15 +86,10 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "role": {
-                        "type": "string",
-                        "enum": ["system","assistant","user"],
-                        "description": "The role of the author of this message",
-                    },
-                    "text": {"type": "string", "description": "Text content in the message"},
-                    "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of image URLs in the message"}
+                    "prompt": {"type": "string", "description": "How to understand user prompts for images"},
+                    "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for user images"}
                 },
-                "required": ["role","image_urls"],
+                "required": ["image_urls"],
             },
         }
     },
