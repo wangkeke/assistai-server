@@ -59,6 +59,7 @@ def understanding_image(args: dict):
             }
         ],
     )
+    print(f"Understand images response = {response}")
     return response.choices[0].message.content
 
 tool_functions = {
