@@ -37,13 +37,13 @@ def generate_image(args: dict):
 
 
 def understanding_image(args: dict):
-    """Understand images based on user prompt"""
-    prompt: str = args.get("prompt")
+    """Understand images based on user description"""
+    description: str = args.get("description")
     print(f"understanding_image tool args is : {args}")
     image_urls: list[str] = args.get("image_urls")
     contents = []
-    if prompt:
-        contents.append({"type": "text", "text": prompt})
+    if description:
+        contents.append({"type": "text", "text": description})
     for image_url in image_urls:
         contents.append({"type": "image_url", "image_url": image_url})
     response = client.chat.completions.create(
@@ -92,10 +92,10 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "prompt": {"type": "string", "description": "user prompt"},
+                    "description": {"type": "string", "description": "user description"},
                     "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for images"}
                 },
-                "required": ["image_urls"],
+                "required": ["description", "image_urls"],
             },
         }
     },
