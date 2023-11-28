@@ -18,6 +18,8 @@ os.environ["OAUTH2_SECRET_KEY"] = OAUTH2_SECRET_KEY
 os.environ["OAUTH2_ALGORITHM"] = "HS256"
 # openai默认日志等级
 os.environ.setdefault("OPENAI_LOG", "debug")
+os.environ["OPENAI_LOG"] = "debug"
+os.environ["MODEL_NAME"] = "gpt-4-1106-preview"
 # 生成数据库表结构
 models.Base.metadata.create_all(bind=engine)
 

@@ -33,8 +33,8 @@ supported_file_suffixes = (
 @router.post("/files")
 async def upload_file(files: list[UploadFile], current_user: Annotated[schemas.User, Depends(get_current_user)]):
     result = []
-    nginx_prefix = os.environ.get("NGINX_PREFIX")
-    domain_name = os.environ.get("DOMAIN_NAME","")
+    nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
+    domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
     for file in files:
         file_size = file.size
         if file_size > 10*1024*1024:
@@ -62,9 +62,7 @@ async def upload_file(files: list[UploadFile], current_user: Annotated[schemas.U
                     new_width = new_width*512/new_height
                     new_height = 512
                 img.resize(size=(int(new_width),int(new_height))).save(UPLOAD_PATH + user_dir + "/" + new_file_name) 
-        file_url = f'/api/static/upload/{user_dir}/{new_file_name}'
-        if nginx_prefix:
-            file_url = nginx_prefix + file_url
+        file_url = f'{nginx_prefix}/static/upload/{user_dir}/{new_file_name}'
         result.append({
             "file_etag": file_etag, 
             "file_name": file_name, 

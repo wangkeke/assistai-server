@@ -11,7 +11,7 @@ ctx.verify_mode = ssl.CERT_NONE
 
 # 图像生成
 def generate_image(args: dict):
-    """Use Dall-E-3 to generate an image for the user"""
+    """Generate an image based on the prompt"""
     prompt: str = args.get("prompt")
     print(f"generate_image tool args is : {args}")
     response = client.images.generate(
@@ -21,6 +21,8 @@ def generate_image(args: dict):
         quality="standard",
         n=1,
     )
+    nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
+    domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
     image_url = response.data[0].url
     revised_prompt = prompt
     if response.data[0].revised_prompt:
@@ -31,11 +33,11 @@ def generate_image(args: dict):
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
-    return f'![{revised_prompt}]({os.environ.get("DOMAIN_NAME")}/api/static{image_path} "{prompt}")'
+    return f'![{revised_prompt}]({domain_name + nginx_prefix}/static{image_path} "{prompt}")'
 
 
 def understanding_image(args: dict):
-    """Understanding user images"""
+    """Understand images based on user prompt"""
     prompt: str = args.get("prompt")
     print(f"understanding_image tool args is : {args}")
     image_urls: list[str] = args.get("image_urls")
@@ -53,7 +55,6 @@ def understanding_image(args: dict):
             }
         ],
     )
-    print(f"response = {response}")
     return response.choices[0].message.content
 
 tool_functions = {
@@ -87,10 +88,10 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "prompt": {"type": "string", "description": "Text content in user messages"},
+                    "prompt": {"type": "string", "description": "user prompt"},
                     "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for user images"}
                 },
-                "required": ["prompt","image_urls"],
+                "required": ["image_urls"],
             },
         }
     },
