@@ -23,7 +23,8 @@ def chat_completion(messages: list[dict]):
     if tool_calls:
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
-        messages.append(response_message)  # extend conversation with assistant's reply
+        new_messages = []
+        new_messages.append(response_message)  # extend conversation with assistant's reply
         # Step 4: send the info for each function call and function response to the model
         for tool_call in tool_calls:
             function_name = tool_call.function.name
@@ -31,7 +32,7 @@ def chat_completion(messages: list[dict]):
             function_args = json.loads(tool_call.function.arguments)
             function_response = function_to_call(function_args)
             # function_responses.append(function_response)
-            messages.append(
+            new_messages.append(
                 {
                     "tool_call_id": tool_call.id,
                     "role": "tool",
@@ -41,7 +42,7 @@ def chat_completion(messages: list[dict]):
             )  # extend conversation with function response
         second_response = client.chat.completions.create(
             model=model_name,
-            messages=messages,
+            messages=new_messages,
         )  # get a new response from the model where it can see the function response
         second_response_message = second_response.choices[0].message
         return {"role": second_response_message.role, "content": second_response_message.content}
