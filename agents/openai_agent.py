@@ -23,7 +23,7 @@ def chat_completion(messages: list[dict]):
     if tool_calls:
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
-        new_messages = []
+        new_messages = [{"role": "system", "content": "Please translate the returned content into Chinese"}]
         new_messages.append(response_message)  # extend conversation with assistant's reply
         # Step 4: send the info for each function call and function response to the model
         for tool_call in tool_calls:
