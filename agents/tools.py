@@ -33,7 +33,7 @@ def generate_image(args: dict):
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
-    return f'![{revised_prompt}]({domain_name + nginx_prefix}/static{image_path} "{prompt}")'
+    return f'Image generation results: ![{revised_prompt}]({domain_name + nginx_prefix}/static{image_path} "{prompt}")'
 
 
 def understanding_image(args: dict):
@@ -50,12 +50,16 @@ def understanding_image(args: dict):
         model="gpt-4-vision-preview",       
         messages=[
             {
+                "role": "system",
+                "content": "Please translate the returned content into Chinese",
+            },
+            {
                 "role": "user",
                 "content": contents,
             }
         ],
     )
-    return response.choices[0].message.content
+    return "Image understanding results: " + response.choices[0].message.content
 
 tool_functions = {
     generate_image.__name__ : generate_image,
@@ -89,7 +93,7 @@ tools = [
                 "type": "object",
                 "properties": {
                     "prompt": {"type": "string", "description": "user prompt"},
-                    "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for user images"}
+                    "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for images"}
                 },
                 "required": ["image_urls"],
             },

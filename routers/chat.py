@@ -73,7 +73,7 @@ def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user
             role = topic_chat.role
             content = topic_chat.content
             if topic_chat.attachs:
-                attach_content = ["\n\nList of file URLs uploaded by users: "]
+                attach_content = ["\n\nList of file URLs: "]
                 i = 0
                 for attach in topic_chat.attachs:
                     i = i+1
