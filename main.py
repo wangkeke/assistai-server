@@ -4,12 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from orm import models
 from orm.database import engine
 from fastapi.openapi.docs import (
-    get_redoc_html,
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from routers import user, topic, chat, upload
+from routers import user, topic, chat, upload, agent
 
 # 默认，免费用户每日请求最大次数
 os.environ["DEFAULT_REQUEST_PER_DAY"] = "3"
@@ -45,6 +44,7 @@ app.include_router(user.router)
 app.include_router(topic.router)
 app.include_router(chat.router)
 app.include_router(upload.router)
+app.include_router(agent.router)
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
