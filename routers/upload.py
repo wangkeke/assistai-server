@@ -24,10 +24,10 @@ log = logging.getLogger(__name__)
 
 supported_file_suffixes = (
     ".jpg",".jpeg",".png",".webp",".gif",
-    ".doc",".docx",".xls",".xlsx",".ppt",".pptx",".csv",".pdf",
-    ".txt",".sql",".json",".java",".py",".mq4",".mq5",".mqh",".js",".jsx",".ts",".tsx",".log",".html",".htm",".md",".vue",
-    ".rtf",".ipynb",".css",".cs",".php",".c",".cpp",".swift",".go",".scala",".dart",".lua",".sh",".bash",".ini",".config",
-    ".yaml",".yml",".bat",
+    # ".doc",".docx",".xls",".xlsx",".ppt",".pptx",".csv",".pdf",
+    # ".txt",".sql",".json",".java",".py",".mq4",".mq5",".mqh",".js",".jsx",".ts",".tsx",".log",".html",".htm",".md",".vue",
+    # ".rtf",".ipynb",".css",".cs",".php",".c",".cpp",".swift",".go",".scala",".dart",".lua",".sh",".bash",".ini",".config",
+    # ".yaml",".yml",".bat",
     )
 
 @router.post("/files")

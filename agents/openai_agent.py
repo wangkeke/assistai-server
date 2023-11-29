@@ -1,51 +1,68 @@
 import os
 import json
-import logging
-from agents.core import client
+from agents.core import client, logger
 from agents.tools import tools, tool_functions
+from orm import schemas
 
-log = logging.getLogger(__name__)
 
-def chat_completion(messages: list[dict]):
+def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
     model_name = os.environ.get("MODEL_NAME")
-    log.info(f"model_name = {model_name}, messages={messages}")
+    messages = []
+    last_topic_chat = topic_chats[-1]
+    if last_topic_chat.attachs and len(last_topic_chat.attachs) > 0:
+        for topic_chat in topic_chats:
+            role = topic_chat.role
+            content = []
+            content.append({"type": "text", "text": topic_chat.content})
+            for attach in topic_chat.attachs:
+                    if attach.content_type.startswith('image/'):
+                        content.append({"type": "image_url", "image_url": {"url": attach.file_url}})
+            messages.append({"role": role, "content": content})
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=messages,
+            stream=True       
+        )
+        return response
+    
+    for topic_chat in topic_chats:
+        messages.append({"role": topic_chat.role, "content": topic_chat.content})
+
     response = client.chat.completions.create(
         model=model_name,
         messages=messages,
         tools=tools,
         tool_choice="auto",  # auto is default, but we'll be explicit
+        stream=True
     )
-    log.info(f"response = {response}")
-    response_message = response.choices[0].message
-    tool_calls = response_message.tool_calls
-    function_responses = []
-    # Step 2: check if the model wanted to call a function
-    if tool_calls:
-        # Step 3: call the function
-        # Note: the JSON response may not always be valid; be sure to handle errors
-        new_messages = [{"role": "system", "content": "Please translate the returned content into Chinese"}]
-        new_messages.append(response_message)  # extend conversation with assistant's reply
-        # Step 4: send the info for each function call and function response to the model
-        for tool_call in tool_calls:
-            function_name = tool_call.function.name
-            function_to_call = tool_functions[function_name]
-            function_args = json.loads(tool_call.function.arguments)
-            function_response = function_to_call(function_args)
-            # function_responses.append(function_response)
-            new_messages.append(
-                {
-                    "tool_call_id": tool_call.id,
-                    "role": "tool",
-                    "name": function_name,
-                    "content": function_response,
-                }
-            )  # extend conversation with function response
-        second_response = client.chat.completions.create(
-            model=model_name,
-            messages=new_messages,
-        )  # get a new response from the model where it can see the function response
-        second_response_message = second_response.choices[0].message
-        return {"role": second_response_message.role, "content": second_response_message.content}
-        # return {"role": response_message.role, "content": "\n\n".join(function_responses)}
-    else:
-        return {"role": response_message.role, "content": response_message.content}
+    print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~{response[0]}")
+
+
+
+    # response_message = response.choices[0].message
+    # if response_message.content is None:
+    #     response_message.content = ""
+    # if response_message.function_call is None:
+    #     del response_message.function_call
+    # tool_calls = response_message.tool_calls
+    # if tool_calls:
+    #     messages.append(response_message)  
+    #     for tool_call in tool_calls:
+    #         function_name = tool_call.function.name
+    #         function_to_call = tool_functions[function_name]
+    #         function_args = json.loads(tool_call.function.arguments)
+    #         function_response = function_to_call(function_args)
+    #         messages.append(
+    #             {
+    #                 "tool_call_id": tool_call.id,
+    #                 "role": "tool",
+    #                 "name": function_name,
+    #                 "content": function_response,
+    #             }
+    #         )  
+    # second_response = client.chat.completions.create(
+    #     model=model_name,
+    #     messages=messages,
+    # )  
+    # second_response_message = second_response.choices[0].message
+    # return {"role": second_response_message.role, "content": second_response_message.content}

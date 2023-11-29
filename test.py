@@ -99,3 +99,153 @@ print(hashlib.md5(b"wangkeke565@126.com").hexdigest())
 print(hashlib.md5(b"wangkeke565@qq.com").hexdigest())
 print(hashlib.md5(b"wangkeke565@zenking.com").hexdigest())
 print(hashlib.md5("wangkeke565@zenking.com".encode()).hexdigest())
+
+
+
+
+
+
+from openai import OpenAI
+import json
+import logging
+
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY", "1234567890"),
+    max_retries=0,
+    base_url="http://43.153.6.89:8000/agent/openai"
+    )
+
+# Example dummy function hard coded to return the same weather
+# In production, this could be your backend API or an external API
+def get_current_weather(args: dict):
+    """Get the current weather in a given location"""
+    location = args.get("location")
+    unit="fahrenheit"
+    if args.get("unit"):
+        unit = args.get("unit")
+    if "tokyo" in location.lower():
+        return json.dumps({"location": "Tokyo", "temperature": "10", "unit": "celsius"})
+    elif "san francisco" in location.lower():
+        return json.dumps({"location": "San Francisco", "temperature": "72", "unit": "fahrenheit"})
+    elif "paris" in location.lower():
+        return json.dumps({"location": "Paris", "temperature": "22", "unit": "celsius"})
+    else:
+        return json.dumps({"location": location, "temperature": "unknown"})
+
+def generate_image(args: dict):
+    """Generate an image based on the prompt"""
+    prompt: str = args.get("prompt")
+    return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
+
+def understanding_image(args: dict):
+    """Understand images based on user description"""
+    text: str = args.get("text")
+    image_urls: list[str] = args.get("image_urls")
+    return "这是一段python代码的截图：\n\n下面是一个用Python写的斐波那契函数，其参数是n：\n\n```python\n def fibonacci(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        sequence = [0, 1]\n        while len(sequence) < n:\n            next_number = sequence[-1] + sequence[-2]\n            sequence.append(next_number)\n        return sequence\n```\n\n这个函数将返回一个包含n个斐波那契数列的列表。如果n小于等于0，将返回一个空列表。如果n等于1，将返回一个只包含0的列表。否则，函数将使用循环构建斐波那契数列，直到列表达到n个元素。\n\n "
+
+def run_conversation():
+    # Step 1: send the conversation and available functions to the model
+    # messages = [{"role": "user", "content": "What's the weather like in San Francisco, Tokyo, and Paris?"}]
+    messages = [{"role": "user", "content": "Depending on whether a function call is required as described below, the generated message can only answer yes or no: Generate a picture of a white cat."}]
+    # messages = [{"role": "user", "content": "Depending on whether a function call is required as described below, the generated message can only answer yes or no: Hello!"}]
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. San Francisco, CA",
+                        },
+                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                    },
+                    "required": ["location"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": generate_image.__name__,
+                "description": generate_image.__doc__,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": {
+                            "type": "string",
+                            "description": "a detailed prompt to generate an image",
+                        },
+                    },
+                    "required": ["prompt"],
+                },
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": understanding_image.__name__,
+                "description": understanding_image.__doc__,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of urls for images"},
+                        "text": {"type": "string", "description": "Other text content"},
+                    },
+                    "required": ["text", "image_urls"],
+                },
+            }
+        },
+    ]
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
+        messages=messages,
+        tools=tools,
+        tool_choice="auto",  # auto is default, but we'll be explicit
+    )
+    print(response)
+    response_message = response.choices[0].message
+    if response_message.content is None:
+        response_message.content = ""
+    if response_message.function_call is None:
+        del response_message.function_call
+    tool_calls = response_message.tool_calls
+    # Step 2: check if the model wanted to call a function
+    if tool_calls:
+        # Step 3: call the function
+        # Note: the JSON response may not always be valid; be sure to handle errors
+        available_functions = {
+            "get_current_weather": get_current_weather,
+            "generate_image": generate_image,
+            "understanding_image": understanding_image
+        }  # only one function in this example, but you can have multiple
+        messages.append(response_message)  # extend conversation with assistant's reply
+        # Step 4: send the info for each function call and function response to the model
+        print(messages)
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+            function_response = function_to_call(function_args)
+            messages.append(
+                {
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": function_response,
+                }
+            )  # extend conversation with function response
+        second_response = client.chat.completions.create(
+            model="gpt-3.5-turbo-1106",
+            messages=messages,
+        )  # get a new response from the model where it can see the function response
+        return second_response
+print(run_conversation())
+
+
+
+new_messages = [{"role": "user"}]
+print(new_messages[0]["role"])

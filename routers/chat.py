@@ -68,19 +68,7 @@ async def event_publisher(message, chat_id: int, stats_count: int):
 def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
-        messages = []
-        for topic_chat in topic_chats:
-            role = topic_chat.role
-            content = topic_chat.content
-            if topic_chat.attachs:
-                attach_content = ["\n\nList of file URLs: "]
-                i = 0
-                for attach in topic_chat.attachs:
-                    i = i+1
-                    attach_content.append(f"{i}. {attach.file_url}")
-                content += "\n".join(attach_content)
-            messages.append({"role": role, "content": content})
-        response = chat_completion(messages)
+        response = chat_completion(topic_chats)
         assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(**response), topic_id=topic_id)
         return schemas.TopicChatExtend(topic_chat=assistant_chat, remain_count=rpd_amount - user_chat_stats.stats_value - 1)
         # return EventSourceResponse(event_publisher(response, chat_id=assistant_chat.id, stats_count=rpd_amount - user_chat_stats.stats_value))
