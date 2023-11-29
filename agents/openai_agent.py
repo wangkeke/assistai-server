@@ -35,9 +35,21 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
         tool_choice="auto",  # auto is default, but we'll be explicit
         stream=True
     )
-    print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~{response[0]}")
-
-
+    tool_content = []
+    is_function_call = False
+    role = "assistant"
+    for chunk in response:
+        if is_function_call or chunk.choices[0].finish_reason == "tool_calls":
+            is_function_call = True
+            if chunk.choices[0].delta.content:
+                tool_content.append(chunk.choices[0].delta.content)
+            if chunk.choices[0].delta.role:
+                role = chunk.choices[0].delta.role
+        else:
+            break
+    if not is_function_call:
+        return response
+    print(f"Stream response = {tool_content}")
 
     # response_message = response.choices[0].message
     # if response_message.content is None:
