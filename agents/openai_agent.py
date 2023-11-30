@@ -40,6 +40,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
     role = "assistant"
     for chunk in response:
         print(f"chunk={chunk}")
+        logger.warn(f"chunk={chunk}")
         if is_function_call or chunk.choices[0].finish_reason == "tool_calls":
             is_function_call = True
             if chunk.choices[0].delta.content:
@@ -53,6 +54,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
     
     for chunk in response:
         print(f"chunk={chunk}")
+        logger.warn(f"chunk={chunk}")
 
 
     # response_message = response.choices[0].message
