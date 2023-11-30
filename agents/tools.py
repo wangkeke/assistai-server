@@ -14,25 +14,24 @@ ctx.verify_mode = ssl.CERT_NONE
 def generate_image(args: dict):
     """Generate an image based on the prompt"""
     prompt: str = args.get("prompt")
-    return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    # logger.info(f"generate_image tool args is : {args}")
-    # response = client.images.generate(
-    #     model="dall-e-3",
-    #     prompt=prompt,
-    #     size="1024x1024",
-    #     quality="standard",
-    #     n=1,
-    # )
-    # nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
-    # domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
-    # image_url = response.data[0].url
-    # data_path = os.getenv("DATA_PATH")
-    # os.makedirs(f"{data_path}/images", exist_ok=True)
-    # image_path = f"/images/{str(uuid.uuid4())}.webp"
-    # with urllib.request.urlopen(image_url, context=ctx) as response:
-    #     with open(data_path + image_path, 'wb') as f: 
-    #         f.write(response.read())
-    # return json.dumps({"prompt": prompt, "image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
+    # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=prompt,
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+    nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
+    domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
+    image_url = response.data[0].url
+    data_path = os.getenv("DATA_PATH")
+    os.makedirs(f"{data_path}/images", exist_ok=True)
+    image_path = f"/images/{str(uuid.uuid4())}.webp"
+    with urllib.request.urlopen(image_url, context=ctx) as response:
+        with open(data_path + image_path, 'wb') as f: 
+            f.write(response.read())
+    return json.dumps({"prompt": prompt, "image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
 
 
 def understanding_image(args: dict):
