@@ -40,7 +40,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
     role = "assistant"
 
     for chunk in response:
-        logger.info(f"~~~~~~~~ chunk = {chunk}")
+        logger.warn(f"~~~~~~~~ chunk = {chunk}")
     return
     for chunk in response:
         logger.warn(f"chunk={chunk}")
