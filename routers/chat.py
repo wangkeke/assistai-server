@@ -79,7 +79,7 @@ async def event_publisher(chunks, db: Session, topic_id: str, remain_num: int):
     content_type = 'text'
     content = ''.join(collected_messages)
     topic_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=content), topic_id=topic_id, content_type=content_type)
-    end_data = json.dumps({"id" : topic_chat.id, "role": topic_chat.role, "content": topic_chat.content,"content_type": topic_chat.content_type, "create_time": topic_chat.create_time.isoformat(), "remain_num": remain_num})
+    end_data = json.dumps({"id" : topic_chat.id, "remain_num": remain_num})
     yield dict(event='end', data=end_data)
 
 # 聊天交互接口
