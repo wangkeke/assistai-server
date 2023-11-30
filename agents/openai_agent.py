@@ -37,21 +37,21 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
     )
     tool_content = []
     is_function_call = False
-    role = "assistant"
-
+    tool_calls = []
+    role = None
     for chunk in response:
-        logger.warn(f"~~~~~~~~ chunk = {chunk}")
-    return
-    for chunk in response:
-        logger.warn(f"chunk={chunk}")
-        if is_function_call or chunk.choices[0].finish_reason == "tool_calls":
+        if not role and chunk.choices[0].delta.role:
+            role = chunk.choices[0].delta.role
+        if is_function_call or chunk.choices[0].delta.tool_calls:
             is_function_call = True
-            if chunk.choices[0].delta.content:
-                tool_content.append(chunk.choices[0].delta.content)
-            if chunk.choices[0].delta.role:
-                role = chunk.choices[0].delta.role
+            if chunk.choices[0].delta.tool_calls[0].id:
+                tool_calls.append(chunk.choices[0].delta.tool_calls[0])
+            else:
+                tool_calls[-1].function.arguments += chunk.choices[0].delta.tool_calls[0].function.arguments
         else:
             break
+    logger.warn(f"+++++++++++++++++ tool_calls : {tool_calls}")
+
     if not is_function_call:
         return response
 
