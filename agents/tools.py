@@ -42,7 +42,7 @@ def understanding_image(args: dict):
     if text:
         contents.append({"type": "text", "text": text})
     for image_url in image_urls:
-        contents.append({"type": "image_url", "image_url": image_url})
+        contents.append({"type": "image_url", "image_url": {"url": image_url}})
     response = client.chat.completions.create(
         model="gpt-4-vision-preview",       
         messages=[

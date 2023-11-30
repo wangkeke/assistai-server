@@ -21,6 +21,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
         response = client.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=messages,
+            max_tokens=1500,
             stream=True       
         )
         return response
