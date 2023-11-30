@@ -20,7 +20,8 @@ os.environ["OAUTH2_ALGORITHM"] = "HS256"
 os.environ.setdefault("OPENAI_LOG", "debug")
 os.environ["OPENAI_LOG"] = "debug"
 # os.environ["MODEL_NAME"] = "gpt-4-1106-preview"
-os.environ["MODEL_NAME"] = "gpt-3.5-turbo-1106"
+# os.environ["MODEL_NAME"] = "gpt-3.5-turbo-1106"
+os.environ["MODEL_NAME"] = os.environ.get("MODEL_NAME", "gpt-3.5-turbo-1106")
 
 # 生成数据库表结构
 models.Base.metadata.create_all(bind=engine)

@@ -101,7 +101,7 @@ class TopicChatIssue(TopicChatIssueBase):
 class TopicChat(TopicChatBase):
     id: int
     content_type: str = None
-    create_time: datetime
+    create_time: datetime = None
     topic_chat_issues: list[TopicChatIssue] = []
     attachs: list[TopicChatAttach] = []
     class Config:

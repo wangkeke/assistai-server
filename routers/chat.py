@@ -36,7 +36,7 @@ def check_request_limit(db: Session, current_user: schemas.User):
     if rpd_count >= rpd_amount:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You have exhausted the number of messages you can send today."
+            detail="Today messages have been exhausted."
         )
     return user_chat_stats, rpd_amount
 
@@ -63,15 +63,32 @@ async def event_publisher(message, chat_id: int, stats_count: int):
         yield dict(event='stream', data=content[i].replace('\n', '\\n'))
     yield dict(event='end', data=json.dumps({"chat_id" : chat_id, "remain_num": stats_count}))
 
+
+
+
+# 流式响应函数
+async def event_publisher(chunks, db: Session, topic_id: str, remain_num: int):
+    collected_messages = []
+    role = "assistant"
+    yield dict(event="start", data=role)
+    for chunk in chunks:
+        if chunk.choices[0].delta.content:
+            content = chunk.choices[0].delta.content
+            collected_messages.append(content)
+            yield dict(event='stream', data=content.replace('\n', '\\n'))
+    content_type = 'text'
+    content = ''.join(collected_messages)
+    topic_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(role=role, content=content), topic_id=topic_id, content_type=content_type)
+    end_data = json.dumps({"id" : topic_chat.id, "role": topic_chat.role, "content": topic_chat.content,"content_type": topic_chat.content_type, "create_time": topic_chat.create_time.isoformat(), "remain_num": 3})
+    yield dict(event='end', data=end_data)
+
 # 聊天交互接口
-@router.post("/{topic_id}/conversation", response_model=schemas.TopicChatExtend)
-def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+@router.post("/{topic_id}/conversation")
+async def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
         response = chat_completion(topic_chats)
-        assistant_chat = crud.create_topic_chat(db, topic_chat=schemas.TopicChatCreate(**response), topic_id=topic_id)
-        return schemas.TopicChatExtend(topic_chat=assistant_chat, remain_count=rpd_amount - user_chat_stats.stats_value - 1)
-        # return EventSourceResponse(event_publisher(response, chat_id=assistant_chat.id, stats_count=rpd_amount - user_chat_stats.stats_value))
+        return EventSourceResponse(event_publisher(response, topic_id=topic_id, stats_count=rpd_amount - user_chat_stats.stats_value))
     finally: 
         crud.increase_user_chat_stats(db, id=user_chat_stats.id)
 

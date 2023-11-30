@@ -249,3 +249,19 @@ print(run_conversation())
 
 new_messages = [{"role": "user"}]
 print(new_messages[0]["role"])
+
+
+
+import orm.schemas
+import orm.models
+import json
+from datetime import datetime
+
+topic_chat = orm.models.TopicChat(role="role", content_type="content_type", content="topic_chat.content", 
+                                  topic_id="topic_id", 
+                                  create_time=datetime.now(), 
+                                  flag=True,
+                                  id= 1
+                                  )
+print(json.dumps({"id" : topic_chat.id, "role": "assistant", "content": "dsadsada","content_type": "text", "create_time": datetime.now().isoformat(), "remain_num": 3}))
+

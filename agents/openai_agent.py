@@ -3,7 +3,6 @@ import json
 from agents.core import client, logger
 from agents.tools import tools, tool_functions
 from orm import schemas
-from openai.types.chat import ChatCompletionChunk, ChatCompletionMessage, ChatCompletionMessageToolCall
 
 
 def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
@@ -36,7 +35,6 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
         tool_choice="auto",  # auto is default, but we'll be explicit
         stream=True
     )
-    tool_content = []
     is_function_call = False
     tool_calls = []
     role = None
@@ -45,17 +43,19 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
             role = chunk.choices[0].delta.role
         if is_function_call or chunk.choices[0].delta.tool_calls:
             is_function_call = True
-            if chunk.choices[0].delta.tool_calls[0].id:
-                tool_calls.append(chunk.choices[0].delta.tool_calls[0])
-            else:
-                tool_calls[-1].function.arguments += chunk.choices[0].delta.tool_calls[0].function.arguments
+            if chunk.choices[0].delta.tool_calls:
+                if chunk.choices[0].delta.tool_calls[0].id:
+                    tool_calls.append(chunk.choices[0].delta.tool_calls[0])
+                else:
+                    tool_calls[-1].function.arguments += chunk.choices[0].delta.tool_calls[0].function.arguments
         else:
             break
 
     if not is_function_call:
         return response
     
-    messages.append({role: role, content: "", tool_calls: tool_calls})
+    messages.append({"role": role, "content": "", "tool_calls": tool_calls})
+    logger.warn(f"tool_calls : {len(tool_calls)} = {tool_calls}, messages = {messages}")
     for tool_call in tool_calls:
         function_name = tool_call.function.name
         function_to_call = tool_functions[function_name]
@@ -69,11 +69,8 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
                 "content": function_response,
             }
         )  
-    second_response = client.chat.completions.create(
-        model=model_name,
+    return client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
         messages=messages,
+        stream=True
     )  
-    logger.warn(f"================= second_response : {second_response}")
-    return
-    second_response_message = second_response.choices[0].message
-    return {"role": second_response_message.role, "content": second_response_message.content}
