@@ -3,6 +3,7 @@ import json
 from agents.core import client, logger
 from agents.tools import tools, tool_functions
 from orm import schemas
+from openai.types.chat import ChatCompletionChunk, ChatCompletionMessage, ChatCompletionMessageToolCall
 
 
 def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
@@ -50,36 +51,29 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
                 tool_calls[-1].function.arguments += chunk.choices[0].delta.tool_calls[0].function.arguments
         else:
             break
-    logger.warn(f"+++++++++++++++++ tool_calls : {tool_calls}")
 
     if not is_function_call:
         return response
-
-
-    # response_message = response.choices[0].message
-    # if response_message.content is None:
-    #     response_message.content = ""
-    # if response_message.function_call is None:
-    #     del response_message.function_call
-    # tool_calls = response_message.tool_calls
-    # if tool_calls:
-    #     messages.append(response_message)  
-    #     for tool_call in tool_calls:
-    #         function_name = tool_call.function.name
-    #         function_to_call = tool_functions[function_name]
-    #         function_args = json.loads(tool_call.function.arguments)
-    #         function_response = function_to_call(function_args)
-    #         messages.append(
-    #             {
-    #                 "tool_call_id": tool_call.id,
-    #                 "role": "tool",
-    #                 "name": function_name,
-    #                 "content": function_response,
-    #             }
-    #         )  
-    # second_response = client.chat.completions.create(
-    #     model=model_name,
-    #     messages=messages,
-    # )  
-    # second_response_message = second_response.choices[0].message
-    # return {"role": second_response_message.role, "content": second_response_message.content}
+    
+    messages.append({role: role, content: "", tool_calls: tool_calls})
+    for tool_call in tool_calls:
+        function_name = tool_call.function.name
+        function_to_call = tool_functions[function_name]
+        function_args = json.loads(tool_call.function.arguments)
+        function_response = function_to_call(function_args)
+        messages.append(
+            {
+                "tool_call_id": tool_call.id,
+                "role": "tool",
+                "name": function_name,
+                "content": function_response,
+            }
+        )  
+    second_response = client.chat.completions.create(
+        model=model_name,
+        messages=messages,
+    )  
+    logger.warn(f"================= second_response : {second_response}")
+    return
+    second_response_message = second_response.choices[0].message
+    return {"role": second_response_message.role, "content": second_response_message.content}
