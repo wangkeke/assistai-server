@@ -88,7 +88,7 @@ async def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], curren
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
         response = chat_completion(topic_chats)
-        return EventSourceResponse(event_publisher(response, topic_id=topic_id, remain_num=rpd_amount - user_chat_stats.stats_value))
+        return EventSourceResponse(event_publisher(response, db=db, topic_id=topic_id, remain_num=rpd_amount - user_chat_stats.stats_value - 1))
     finally: 
         crud.increase_user_chat_stats(db, id=user_chat_stats.id)
 
