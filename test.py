@@ -146,7 +146,7 @@ def understanding_image(args: dict):
 def run_conversation():
     # Step 1: send the conversation and available functions to the model
     # messages = [{"role": "user", "content": "What's the weather like in San Francisco, Tokyo, and Paris?"}]
-    messages = [{"role": "user", "content": "Depending on whether a function call is required as described below, the generated message can only answer yes or no: Generate a picture of a white cat."}]
+    messages = [{"role": "user", "content": "Generate a picture of a white cat."}]
     # messages = [{"role": "user", "content": "Depending on whether a function call is required as described below, the generated message can only answer yes or no: Hello!"}]
     tools = [
         {
@@ -201,7 +201,7 @@ def run_conversation():
         },
     ]
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-1106",
+        model="gpt-4-1106-preview",
         messages=messages,
         tools=tools,
         tool_choice="auto",  # auto is default, but we'll be explicit
