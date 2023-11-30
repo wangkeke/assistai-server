@@ -16,7 +16,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
             content.append({"type": "text", "text": topic_chat.content})
             for attach in topic_chat.attachs:
                     if attach.content_type.startswith('image/'):
-                        content.append({"type": "image_url", "image_url": {"url": attach.file_url}})
+                        content.append({"type": "image_url", "image_url": attach.file_url})
             messages.append({"role": role, "content": content})
         response = client.chat.completions.create(
             model="gpt-4-vision-preview",
