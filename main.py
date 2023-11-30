@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import user, topic, chat, upload, agent
 
 # 默认，免费用户每日请求最大次数
-os.environ["DEFAULT_REQUEST_PER_DAY"] = "3"
+os.environ["DEFAULT_REQUEST_PER_DAY"] = "20"
 # Oauth2+JWT登录认证
 OAUTH2_SECRET_KEY = "fbaab29d8bdf2c43ec4488aab4e56c1a1bbc3cc4d8402eabb80131662760f1c4"
 os.environ["OAUTH2_SECRET_KEY"] = OAUTH2_SECRET_KEY
