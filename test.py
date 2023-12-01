@@ -265,3 +265,59 @@ topic_chat = orm.models.TopicChat(role="role", content_type="content_type", cont
                                   )
 print(json.dumps({"id" : topic_chat.id, "role": "assistant", "content": "dsadsada","content_type": "text", "create_time": datetime.now().isoformat(), "remain_num": 3}))
 
+
+
+
+
+
+from openai import OpenAI
+
+client = OpenAI()
+
+response = client.chat.completions.create(
+    model="gpt-4-vision-preview",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What’s in this image?"},
+                {
+                    "type": "image_url",
+                    "image_url": "https://www.uassistant.net/api/static/upload/7b8ea8096943efb4ae9c221395803ec1/29124d19-764a-4cea-844d-1bd7645ed622.jpg",
+                },
+            ],
+        }
+    ],
+    max_tokens=300,
+    stream=True,
+)
+
+print(response.choices[0])
+
+
+
+
+curl https://api.openai.com/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -d '{
+    "model": "gpt-4-vision-preview",
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "What’s in this image?"
+          },
+          {
+            "type": "image_url",
+            "image_url": {
+              "url": "https://www.uassistant.net/api/static/upload/7b8ea8096943efb4ae9c221395803ec1/6855dd9a-1cc3-43b3-894a-d01a0bfc1e46.png"
+            }
+          }
+        ]
+      }
+    ],
+    "max_tokens": 300
+  }'
