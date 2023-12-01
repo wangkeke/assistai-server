@@ -320,12 +320,3 @@ curl https://api.openai.com/v1/chat/completions \
     ],
     "max_tokens": 300
   }'
-
-import base64
-
-image_url = "https://www.uassistant.net/api/static/upload/7b8ea8096943efb4ae9c221395803ec1/6855dd9a-1cc3-43b3-894a-d01a0bfc1e46.png"
-UPLOAD_PATH = os.getenv("UPLOAD_PATH", "/home/lighthouse/workspace/data/upload/")
-path = image_url[image_url.index("/upload/") + 8:]
-print(UPLOAD_PATH + path)
-with open(UPLOAD_PATH + path, "rb") as image_file:
-    print(base64.b64encode(image_file.read()).decode('utf-8'))
