@@ -3,7 +3,7 @@ import json
 from agents.core import client, logger
 from agents.tools import tools, tool_functions
 from orm import schemas
-from util import encode_image
+from agents.util import encode_image
 
 
 
