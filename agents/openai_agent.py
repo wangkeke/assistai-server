@@ -3,6 +3,8 @@ import json
 from agents.core import client, logger
 from agents.tools import tools, tool_functions
 from orm import schemas
+from util import encode_image
+
 
 
 def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
@@ -16,7 +18,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
             content.append({"type": "text", "text": topic_chat.content})
             for attach in topic_chat.attachs:
                     if attach.content_type.startswith('image/'):
-                        content.append({"type": "image_url", "image_url": attach.file_url})
+                        content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encode_image(image_url=attach.file_url)}"}})
             messages.append({"role": role, "content": content})
         response = client.chat.completions.create(
             model="gpt-4-vision-preview",
