@@ -320,3 +320,5 @@ curl https://api.openai.com/v1/chat/completions \
     ],
     "max_tokens": 300
   }'
+
+# openai.BadRequestError: Error code: 400 - {'error': {'code': 'content_policy_violation', 'message': 'This request has been blocked by our content filters.', 'param': None, 'type': 'invalid_request_error'}}

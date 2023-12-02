@@ -73,7 +73,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
             }
         )  
     return client.chat.completions.create(
-        model="gpt-3.5-turbo-1106",
+        model=model_name,
         messages=messages,
         stream=True
     )  
