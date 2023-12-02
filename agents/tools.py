@@ -32,7 +32,8 @@ def generate_image(args: dict):
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
     # return json.dumps({"image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
-    return f'{domain_name + nginx_prefix}/static{image_path}'
+    # return f'{domain_name + nginx_prefix}/static{image_path}'
+    return f'An image has been generated:\n ![{prompt}]({domain_name + nginx_prefix}/static{image_path} "{prompt}")'
 
 
 def understanding_image(args: dict):
