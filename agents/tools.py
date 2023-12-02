@@ -27,7 +27,7 @@ def generate_image(args: dict):
     image_url = response.data[0].url
     data_path = os.getenv("DATA_PATH")
     os.makedirs(f"{data_path}/images", exist_ok=True)
-    image_path = f"/images/{str(uuid.uuid4())}.webp"
+    image_path = f"/images/{str(uuid.uuid4())}.png"
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
