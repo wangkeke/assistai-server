@@ -16,7 +16,7 @@ def generate_image(args: dict):
     prompt: str = args.get("prompt")
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
     response = client.images.generate(
-        model="dall-e-3",
+        model="dall-e-2",
         prompt=prompt,
         size="1024x1024",
         quality="standard",
