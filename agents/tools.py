@@ -11,12 +11,12 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 # 图像生成
-def generate_image(args: dict):
-    """Generate an image based on the prompt"""
+def get_generated_image_url(args: dict):
+    """Get generated an image url based on the prompt"""
     prompt: str = args.get("prompt")
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
     response = client.images.generate(
-        model="dall-e-2",
+        model="dall-e-3",
         prompt=prompt,
         size="1024x1024",
         quality="standard",
@@ -32,8 +32,7 @@ def generate_image(args: dict):
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
     # return json.dumps({"image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
-    # return f'{domain_name + nginx_prefix}/static{image_path}'
-    return f'An image has been generated:\n ![{prompt}]({domain_name + nginx_prefix}/static{image_path} "{prompt}")'
+    return f'{domain_name + nginx_prefix}/static{image_path}'
 
 
 def understanding_image(args: dict):
@@ -57,7 +56,7 @@ def understanding_image(args: dict):
     return json.dumps({"content": response.choices[0].message.content})
 
 tool_functions = {
-    generate_image.__name__ : generate_image,
+    get_generated_image_url.__name__ : get_generated_image_url,
     # understanding_image.__name__ : understanding_image
 }
 
@@ -65,8 +64,8 @@ tools = [
     {
         "type": "function",
         "function": {
-            "name": generate_image.__name__,
-            "description": generate_image.__doc__,
+            "name": get_generated_image_url.__name__,
+            "description": get_generated_image_url.__doc__,
             "parameters": {
                 "type": "object",
                 "properties": {
