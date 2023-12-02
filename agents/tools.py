@@ -25,9 +25,10 @@ def generate_image(args: dict):
     nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
     domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
     image_url = response.data[0].url
+    print(image_url)
     data_path = os.getenv("DATA_PATH")
     os.makedirs(f"{data_path}/images", exist_ok=True)
-    image_path = f"/images/{str(uuid.uuid4())}.webp"
+    image_path = f"/images/{str(uuid.uuid4())}.jpg"
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
