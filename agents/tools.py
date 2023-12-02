@@ -31,8 +31,7 @@ def get_generated_image_url(args: dict):
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
-    # return json.dumps({"image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
-    return f'{domain_name + nginx_prefix}/static{image_path}'
+    return json.dumps({"image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
 
 
 def understanding_image(args: dict):
