@@ -14,6 +14,7 @@ ctx.verify_mode = ssl.CERT_NONE
 def generate_image(args: dict):
     """Generate an image based on the prompt"""
     prompt: str = args.get("prompt")
+    # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
     response = client.images.generate(
         model="dall-e-3",
@@ -27,12 +28,11 @@ def generate_image(args: dict):
     image_url = response.data[0].url
     data_path = os.getenv("DATA_PATH")
     os.makedirs(f"{data_path}/images", exist_ok=True)
-    image_path = f"/images/{str(uuid.uuid4())}.webp"
+    image_path = f"/images/{str(uuid.uuid4())}.png"
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(data_path + image_path, 'wb') as f: 
             f.write(response.read())
-    return json.dumps({"image_url": f'{domain_name + nginx_prefix}/static{image_path}'})
-
+    return f"Here is the result from the dall-e-3 tool: {domain_name + nginx_prefix}/static{image_path}"
 
 def understanding_image(args: dict):
     """Understand images based on user description"""

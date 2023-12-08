@@ -9,7 +9,7 @@ from agents.util import encode_image
 
 def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
     model_name = os.environ.get("MODEL_NAME")
-    messages = []
+    messages = [{"role":"system","content":'1. Never ignore the results of the tool.\n2. In the case of an image, use the following format to display it: ![Image Alt](Image Link "Image Title")'}]
     last_topic_chat = topic_chats[-1]
     if last_topic_chat.attachs and len(last_topic_chat.attachs) > 0:
         for topic_chat in topic_chats:
@@ -74,6 +74,7 @@ def chat_completion(topic_chats: list[schemas.TopicChatCreate]):
         )  
     return client.chat.completions.create(
         model="gpt-3.5-turbo-1106",
+        #model=model_name,
         messages=messages,
         stream=True
     )  
