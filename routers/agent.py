@@ -37,3 +37,18 @@ async def openai_agent(request: Request):
             messages=messages,
             stream=stream
         )
+
+# openai代理
+@router.post("/openai/embeddings")
+async def openai_embeddings(request: Request):
+    json_data = await request.json()
+    model_name = json_data['model']
+    input = json_data['input']
+    encoding_format = "float"
+    if json_data.get("encoding_format"):
+        encoding_format = json_data.get("encoding_format")
+    return client.embeddings.create(
+        model=model_name,
+        input=input,
+        encoding_format=encoding_format
+    )

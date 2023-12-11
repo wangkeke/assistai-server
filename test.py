@@ -293,32 +293,63 @@ response = client.chat.completions.create(
 
 print(response.choices[0])
 
+# langchain文档解析
 
+from openai import OpenAI
+import json
 
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY", "1234567890"),
+    max_retries=0,
+    base_url="http://43.153.6.89:8000/agent/openai"
+    )
 
-curl https://api.openai.com/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -d '{
-    "model": "gpt-4-vision-preview",
-    "messages": [
-      {
-        "role": "user",
-        "content": [
-          {
-            "type": "text",
-            "text": "What’s in this image?"
-          },
-          {
-            "type": "image_url",
-            "image_url": {
-              "url": "https://www.uassistant.net/api/static/upload/7b8ea8096943efb4ae9c221395803ec1/6855dd9a-1cc3-43b3-894a-d01a0bfc1e46.png"
-            }
-          }
-        ]
-      }
-    ],
-    "max_tokens": 300
-  }'
+from langchain.document_loaders import TextLoader
 
-# openai.BadRequestError: Error code: 400 - {'error': {'code': 'content_policy_violation', 'message': 'This request has been blocked by our content filters.', 'param': None, 'type': 'invalid_request_error'}}
+loader = TextLoader("D:\\个人简历.md", encoding="utf-8")
+loader.load()
+
+from langchain.document_loaders.markdown import UnstructuredMarkdownLoader
+
+loader = UnstructuredMarkdownLoader("D:\\个人简历.md", mode="elements")
+loader.load()
+
+from langchain.document_loaders.csv_loader import CSVLoader
+
+loader = CSVLoader(file_path="D:\\sys_dict.csv", autodetect_encoding=True,
+                   csv_args={
+                       'delimiter': ',',
+                       'quotechar': '"',
+                       'fieldnames': ['id']
+                   })
+loader.load()
+
+from langchain.document_loaders import BSHTMLLoader
+
+loader = BSHTMLLoader(file_path="D:\\LLM Powered Autonomous Agents _ Lil'Log.html",
+                      open_encoding="utf-8")
+loader.load()
+
+# ====================================================
+from openai import OpenAI
+from langchain.document_loaders import PyPDFLoader
+
+# loader = PyPDFLoader(file_path="D:\\100个Python爬虫常见问题(3).pdf", 
+#                      extract_images=True)
+loader = PyPDFLoader(file_path="D:\\清华工程教育探究课程个人心得_20231211161930.pdf",
+                     extract_images=True)
+pages = loader.load_and_split()
+pages[0]
+
+from langchain.vectorstores.faiss import FAISS
+from langchain.embeddings.openai import OpenAIEmbeddings
+
+faiss_index = FAISS.from_documents(pages, 
+                                   OpenAIEmbeddings(
+                                       base_url="http://43.153.6.89:8000/agent/openai",
+                                       api_key="123456789",
+                                   ))
+docs = faiss_index.similarity_search(query="我去了哪里?", k=2)
+for doc in docs:
+    print(doc)
+
