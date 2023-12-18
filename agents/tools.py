@@ -23,7 +23,7 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         quality = "standard"
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    response = client.images.generate(
+    response = await aclient.images.generate(
         model="dall-e-3",
         prompt=prompt,
         size=size,
