@@ -39,7 +39,7 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
     with urllib.request.urlopen(image_url, context=ctx) as response:
         with open(image_path, 'wb') as f: 
             f.write(response.read())
-    user_image_path = image_path.replace(os.getenv("DATA_PATH"))
+    user_image_path = image_path.replace(os.getenv("DATA_PATH"),"")
     image_url = f'{domain_name + nginx_prefix}/static{user_image_path}'
     create_user_image(user_id=user_id, user_image={
             "prompt": prompt,
