@@ -4,7 +4,7 @@ from typing import List
 from agents.core import client, logger
 from agents.tools import tools, tool_functions
 from orm import schemas
-from agents.util import execute
+from agents.util import batch_tasks
 import asyncio
 
 
@@ -64,9 +64,8 @@ def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas
                 "funciton_call": function_to_call(user_id=user_id, user_partition=user_partition, content=text, tool_args=function_args),
             }
         )
-    results = asyncio.run(
-        execute(*list(tool_function_message["funciton_call"] 
-                      for tool_function_message in tool_function_messages)))
+    results = batch_tasks(list(tool_function_message["funciton_call"] 
+                      for tool_function_message in tool_function_messages))
     for i, result in enumerate(results):
         character_count += len(result)
         tool_function_messages[i]["content"] = result

@@ -749,15 +749,19 @@ async def main():
     )
     print(L)
 
+import nest_asyncio
+nest_asyncio.apply()
+asyncio.run(main())
+
 import asyncio
+import nest_asyncio
+nest_asyncio.apply()
 
 async def func():
     await asyncio.sleep(1000)
     print("func")
 
-loop = asyncio.get_event_loop()
-
-loop.run_until_complete(func())
+asyncio.run(func())
 
 
 # ===========================================================
@@ -767,3 +771,5 @@ lst = [{"id":1, "name": "a"},{"id":2, "name": "b"},{"id":3, "name": "c"}]
 list(t["id"] for t in lst)
 
 1024/1792 
+
+3/4
