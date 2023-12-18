@@ -9,7 +9,8 @@ logging.basicConfig(format=FORMAT)
 
 logger = logging.getLogger("agents")
 
-base_url = "http://43.153.6.89:8000/agent/openai"
+# base_url = "http://43.153.6.89:8000/agent/openai"
+base_url = None
 
 
 client = openai.OpenAI(
