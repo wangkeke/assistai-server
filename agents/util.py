@@ -11,7 +11,6 @@ def encode_image(image_url: str):
     return base64.b64encode(image_file.read()).decode('utf-8')
 
 def batch_tasks(tool_functions: list):
-  asyncio.set_event_loop(asyncio.new_event_loop())
   return asyncio.run(execute(tool_functions))
 
 async def execute(tool_functions: list):
