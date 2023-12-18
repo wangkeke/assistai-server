@@ -17,7 +17,7 @@ psycopg2==2.9.7
 langchain==0.0.348
 python-multipart==0.0.6
 opencv-python==4.8.1.78
-Pillow==10.1.0
+Pillow==9.5.0
 unstructured==0.11.2
 pypdf==3.17.2
 pdfplumber==0.10.3
@@ -26,11 +26,11 @@ sentence_transformers==2.2.2
 faiss-cpu==1.7.4
 chromadb==0.4.18
 pdf2image==1.16.3
-pikepdf==8.9.0
+pikepdf==8.5.0
 unstructured_pytesseract==0.3.12
 unstructured_inference==0.7.18
 python-pptx==0.6.23
-
+nest-asyncio==1.5.8
 
 # 代码解释器依赖包
 # open-interpreter==0.1.10
