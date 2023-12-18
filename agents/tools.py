@@ -14,11 +14,11 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 # 图像生成
-async def generate_image(user_id: int, user_partition: str, content: str, args: dict) -> str:
+async def generate_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Generate an image based on the prompt"""
-    prompt: str = args.get("prompt")
+    prompt: str = tool_args.get("prompt")
     size: str = "1024x1024"
-    quality: str = args.get("quality")
+    quality: str = tool_args.get("quality")
     if not quality:
         quality = "standard"
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
@@ -51,9 +51,9 @@ async def generate_image(user_id: int, user_partition: str, content: str, args: 
     return f"Here is the results from the generate_image tool: {image_url}"
 
 
-async def understanding_image(user_id: int, user_partition: str, content: str, args: dict) -> str:
+async def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Understand images based on user description"""
-    image_urls: list[str] = args.get("image_urls")
+    image_urls: list[str] = tool_args.get("image_urls")
     contents = []
     if content:
         contents.append({"type": "text", "text": content})
