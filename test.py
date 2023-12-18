@@ -349,7 +349,421 @@ faiss_index = FAISS.from_documents(pages,
                                        base_url="http://43.153.6.89:8000/agent/openai",
                                        api_key="123456789",
                                    ))
-docs = faiss_index.similarity_search(query="我去了哪里?", k=2)
-for doc in docs:
-    print(doc)
+docs = faiss_index.similarity_search(query="第一次课", k=4)
+docs
+# for doc in docs:
+#     f'{doc.metadata["page"]} : {doc.page_content[:300]}'
 
+
+from langchain.document_loaders import PDFPlumberLoader
+
+loader = PDFPlumberLoader(file_path="D:\\清华工程教育探究课程个人心得_20231211161930.pdf")
+data = loader.load_and_split()
+data
+
+from langchain.text_splitter import (
+    RecursiveCharacterTextSplitter,
+    Language
+)
+
+[e.value for e in Language]
+
+# ====================================================
+from langchain.chains import LLMChain, StuffDocumentsChain
+from langchain.document_transformers import (
+    LongContextReorder,
+)
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.llms.openai import OpenAI
+from langchain.prompts import PromptTemplate
+from langchain.vectorstores.chroma import Chroma
+
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2",
+                                   )
+texts = [
+    "Basquetball is a great sport.",
+    "Fly me to the moon is one of my favourite songs.",
+    "The Celtics are my favourite team.",
+    "This is a document about the Boston Celtics",
+    "I simply love going to the movies",
+    "The Boston Celtics won the game by 20 points",
+    "This is just a random text.",
+    "Elden Ring is one of the best games in the last 15 years.",
+    "L. Kornet is one of the best Celtics players.",
+    "Larry Bird was an iconic NBA player.",
+]
+
+# Create a retriever
+retriever = Chroma.from_texts(texts, embedding=embeddings).as_retriever(search_kwargs={"k": 10})
+query = "What can you tell me about the Celtics?"
+
+# Get relevant documents ordered by relevance score
+docs = retriever.get_relevant_documents(query)
+docs
+
+# ===================================================
+from langchain.embeddings import OpenAIEmbeddings
+
+embeddings_model = OpenAIEmbeddings(
+                                       base_url="http://43.153.6.89:8000/agent/openai",
+                                       api_key="123456789",
+                                   )
+embeddings = embeddings_model.embed_documents(
+    [
+        "Hi there!",
+        "Oh, hello!",
+        "What's your name?",
+        "My friends call me World",
+        "Hello World!"
+    ]
+)
+len(embeddings), len(embeddings[0])
+
+embedded_query = embeddings_model.embed_query("What was the name mentioned in the conversation?")
+embedded_query[:5]
+
+# ==========================================
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores.chroma import Chroma
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema import StrOutputParser
+from langchain.schema.runnable import RunnablePassthrough
+from chromadb.config import Settings
+
+full_text = open("state_of_the_union.txt", mode="r", encoding="utf-8").read()
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+texts = text_splitter.split_text(full_text)
+embeddings = OpenAIEmbeddings(
+    base_url="http://43.153.6.89:8000/agent/openai",
+    api_key="1234567890"
+) 
+db = Chroma.from_texts(texts=texts, 
+                       embedding=embeddings, 
+                    #    client_settings=Settings(
+                    #        is_persistent=True,
+                    #        persist_directory="./chroma/user_id")
+                    )
+retriever = db.as_retriever()
+# retrieved_docs = retriever.invoke(
+#     "What did the president say about Ketanji Brown Jackson?"
+# )
+
+template = """Answer the question based only on the following context:
+
+{context}
+
+Question: {question}
+"""
+prompt = ChatPromptTemplate.from_template(template)
+model = ChatOpenAI(
+    base_url="http://43.153.6.89:8000/agent/openai",
+    api_key="1234567890"
+)
+
+
+def format_docs(docs):
+    return "\n\n".join([d.page_content for d in docs])
+
+
+chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | model
+    | StrOutputParser()
+)
+
+chain.invoke("What did the president say about technology?")
+
+
+# ========================================================================
+from langchain.vectorstores.chroma import Chroma
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chat_models.openai import ChatOpenAI
+
+embeddings = OpenAIEmbeddings(
+    base_url="http://43.153.6.89:8000/agent/openai",
+    api_key="1234567890"
+) 
+vectorstore = Chroma(embedding_function=embeddings, persist_directory="./chroma_db_oai")
+with open("state_of_the_union.txt", encoding="utf-8") as f:
+    state_of_the_union = f.read()
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=1000, chunk_overlap=0)
+texts = text_splitter.split_text(state_of_the_union)
+vectorstore.add_texts(texts=texts)
+retriever = vectorstore.as_retriever(search_type="similarity_score_threshold", search_kwargs={"score_threshold": .5})
+
+docs = retriever.get_relevant_documents("what did he say about ketanji brown jackson")
+docs
+
+question = "What are the approaches to Task Decomposition?"
+llm = ChatOpenAI(temperature=0, 
+                 base_url="http://43.153.6.89:8000/agent/openai",
+                 api_key="1234567890")
+from langchain.retrievers.multi_query import MultiQueryRetriever
+retriever_from_llm = MultiQueryRetriever.from_llm(
+    retriever=retriever, llm=llm
+)
+# Set logging for the queries
+import logging
+
+logging.basicConfig()
+logging.getLogger("langchain.retrievers.multi_query").setLevel(logging.INFO)
+unique_docs = retriever_from_llm.get_relevant_documents(query=question)
+unique_docs
+
+
+
+# =======================================================
+import hashlib
+
+hash_obj = hashlib.sha256()
+with open("D:\\sys_dict.csv", "rb") as f:
+    print("+++")
+    hash_obj.update(f.read())
+hash_obj.hexdigest()
+
+# =========================================================
+from langchain.document_loaders import TextLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.storage import InMemoryByteStore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+loaders = [
+    TextLoader("state_of_the_union.txt", encoding="utf-8"),
+]
+docs = []
+for loader in loaders:
+    docs.extend(loader.load())
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=400)
+docs = text_splitter.split_documents(docs)
+len(docs)
+
+# =====================================================================
+from langchain.storage import LocalFileStore, InMemoryByteStore
+from langchain.document_loaders import TextLoader, PyPDFLoader, UnstructuredPDFLoader, PyPDFium2Loader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.storage import InMemoryByteStore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+
+# file_name = "qinghuaguanhougan.txt"
+file_name = "100_Python_crawler_common_problems.pdf"
+
+loaders = [
+    PyPDFium2Loader(file_path=file_name, extract_images=True),
+    # TextLoader(file_name, encoding="utf-8"),
+]
+docs = []
+for loader in loaders:
+    docs.extend(loader.load())
+
+docs
+
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000)
+docs = text_splitter.split_documents(docs)
+
+docs
+
+embeddings = OpenAIEmbeddings(
+    base_url="http://43.153.6.89:8000/agent/openai",
+    api_key="1234567890"
+) 
+
+chat_open_ai = ChatOpenAI(max_retries=0, 
+           base_url="http://43.153.6.89:8000/agent/openai", 
+           api_key="1234567890")
+
+chat_open_ai_16k = ChatOpenAI(max_retries=0, 
+           base_url="http://43.153.6.89:8000/agent/openai", 
+           api_key="1234567890",
+           model_name="gpt-3.5-turbo-16k")
+
+
+# The vectorstore to use to index the child chunks
+vectorstore = Chroma(collection_name="full_documents", persist_directory="./chromadb/collections", embedding_function=embeddings)
+# The storage layer for the parent documents
+# The storage layer for the parent documents
+docstore = LocalFileStore("./stores/doc")
+bytestore = LocalFileStore("./stores/byte")
+id_key = "doc_id"
+source_key = "source"
+# The retriever (empty to start)
+retriever = MultiVectorRetriever(
+    vectorstore=vectorstore,
+    byte_store=bytestore,
+    docstore=docstore,
+    id_key=id_key,
+)
+import uuid
+doc_ids = [str(uuid.uuid4()) for _ in docs]
+
+child_text_splitter = RecursiveCharacterTextSplitter(chunk_size=500)
+
+sub_docs = []
+for i, doc in enumerate(docs):
+    _id = doc_ids[i]
+    _sub_docs = child_text_splitter.split_documents([doc])
+    for _doc in _sub_docs:
+        _doc.metadata[id_key] = _id
+    sub_docs.extend(_sub_docs)
+
+retriever.vectorstore.add_documents(sub_docs)
+retriever.docstore.mset(list(zip(doc_ids, docs)))
+
+sub_docs = retriever.vectorstore.max_marginal_relevance_search("justice breyer")
+sub_docs
+
+
+
+chain = (
+    {"doc": lambda x: x.page_content}
+    | ChatPromptTemplate.from_template("Summarize the following document in less than 500 words:\n\n{doc}")
+    | chat_open_ai_16k
+    | StrOutputParser()
+)
+
+summaries = chain.batch(docs, {"max_concurrency": 5})
+
+summary_doc_ids = [
+    f"summary_{id}"
+    for id in doc_ids
+]
+
+summary_docs = [
+    Document(page_content=s, metadata={id_key: summary_doc_ids[i], source_key: "file_sha1_code"}) 
+    for i, s in enumerate(summaries)
+]
+retriever.docstore.mset(list(zip(summary_doc_ids, summary_docs)))
+
+chain = (
+    {"content": lambda docs: "\n\n".join(docs)}
+    | ChatPromptTemplate.from_template("Summarize the following document:\n\n{content}")
+    | chat_open_ai_16k
+    | StrOutputParser()
+)
+
+full_summary_text = chain.invoke(summaries)
+
+full_summary_document = Document(page_content=full_summary_text, metadata={id_key: file_name})
+
+retriever.docstore.mset([(file_name, full_summary_document)])
+
+v = retriever.docstore.mget([file_name])
+v
+
+
+# ============================================================================
+from langchain.storage import LocalFileStore, InMemoryByteStore
+from langchain.document_loaders import TextLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.storage import InMemoryByteStore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+
+embeddings = OpenAIEmbeddings(
+    base_url="http://43.153.6.89:8000/agent/openai",
+    api_key="1234567890"
+) 
+# The vectorstore to use to index the child chunks
+vectorstore = Chroma(collection_name="full_documents", persist_directory="./chromadb/collections", embedding_function=embeddings)
+# The storage layer for the parent documents
+# The storage layer for the parent documents
+docstore = LocalFileStore("./stores/doc")
+bytestore = LocalFileStore("./stores/byte")
+id_key = "doc_id"
+# The retriever (empty to start)
+retriever = MultiVectorRetriever(
+    vectorstore=vectorstore,
+    byte_store=bytestore,
+    docstore=docstore,
+    id_key=id_key,
+    search_type="mmr",
+    search_kwargs={
+        "k": 2
+    },
+)
+
+sub_docs = retriever.vectorstore.max_marginal_relevance_search("justice breyer", lambda_mult=0.9)
+sub_docs
+
+retrieved_docs = retriever.get_relevant_documents("justice breyer")
+
+retrieved_docs
+
+
+# ================================================
+import uuid
+doc_ids = [str(uuid.uuid4()) for _ in range(5)]
+summary_doc_ids = [
+    f"summary_{id}"
+    for id in doc_ids
+]
+summary_doc_ids
+
+# ================================================
+
+a = "a"
+if a:
+    b = "b"
+b
+
+tests = [{"id": 34}]
+o = tests[-1]
+id = o["id"]
+o["id"] = id + 6
+tests, id
+
+# ========================================================
+
+import asyncio
+
+async def factorial(name, number):
+    f = 1
+    for i in range(2, number + 1):
+        print(f"Task {name}: Compute factorial({number}), currently i={i}...")
+        await asyncio.sleep(1)
+        f *= i
+    print(f"Task {name}: factorial({number}) = {f}")
+    return f
+
+async def main():
+    # Schedule three calls *concurrently*:
+    L = await asyncio.gather(
+        factorial("A", 2),
+        factorial("B", 3),
+        factorial("C", 4),
+    )
+    print(L)
+
+import asyncio
+
+async def func():
+    await asyncio.sleep(1000)
+    print("func")
+
+loop = asyncio.get_event_loop()
+
+loop.run_until_complete(func())
+
+
+# ===========================================================
+
+lst = [{"id":1, "name": "a"},{"id":2, "name": "b"},{"id":3, "name": "c"}]
+
+list(t["id"] for t in lst)
+
+1024/1792 

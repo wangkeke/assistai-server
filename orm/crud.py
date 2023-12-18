@@ -1,5 +1,6 @@
 from datetime import datetime
 import uuid, sys
+from orm.database import SessionLocal
 from sqlalchemy.orm import Session
 from . import models, schemas
 
@@ -159,3 +160,48 @@ def increase_user_chat_stats(db: Session, id: int):
 def get_user_chat_stats(db: Session, user_id: int, stats_date: datetime, stats_key: str):
     return db.query(models.UserChatStats).filter(models.UserChatStats.user_id == user_id, models.UserChatStats.stats_date == stats_date,
                                           models.UserChatStats.stats_key == stats_key).first()
+
+def get_user_file(db: Session, user_id: int, file_etag: str):
+    return db.query(models.UserFile).filter(models.UserFile.user_id == user_id, 
+                                            models.UserFile.file_etag == file_etag,
+                                            models.UserFile.flag == True).first()
+
+def create_user_file(db: Session, user_id: int, create_user_file: schemas.CreateUserFile):
+    userFile = models.UserFile(
+        file_etag = create_user_file.file_etag,
+        file_name = create_user_file.file_name,
+        content_type = create_user_file.content_type,
+        file_format = create_user_file.file_format,
+        file_size = create_user_file.file_size,
+        file_url = create_user_file.file_url,
+        flag = True,
+        update_time = datetime.now(),
+        create_time = datetime.now(),
+        user_id = user_id
+    )
+    db.add(userFile)
+    db.commit()
+    db.refresh(userFile)
+    return userFile
+
+def create_user_image(user_id:int, user_image: dict):
+    db = SessionLocal()
+    try:
+        userImage = models.UserImage(
+            prompt = user_image["prompt"],
+            quality = user_image["quality"],
+            size = user_image["size"],
+            revised_prompt = user_image["revised_prompt"],
+            image_url = user_image["image_url"],
+            update_time = datetime.now(),
+            create_time = datetime.now(),
+            user_id = user_id,
+        )
+        db.add(userImage)    
+        db.commit()
+    except Exception as e:
+        print(e)
+        db.rollback()
+    finally:
+        db.close()
+

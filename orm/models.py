@@ -101,3 +101,33 @@ class TopicChatIssue(Base):
     user = relationship("User")
     topic_chat_id = Column(Integer, ForeignKey("topic_chat.id"))
     topic_chat = relationship("TopicChat", back_populates="topic_chat_issues")
+
+class UserFile(Base):
+    """用户上传到平台的文件表"""
+    __tablename__ = "user_file"
+
+    id = Column(Integer, primary_key=True)
+    file_etag = Column(String(255))
+    file_name = Column(String(255))
+    content_type = Column(String(255))
+    file_format = Column(String(20))
+    file_size = Column(BigInteger)
+    file_url = Column(String(255))
+    flag = Column(Boolean)
+    update_time = Column(TIMESTAMP)
+    create_time = Column(TIMESTAMP)
+    user_id = Column(Integer, ForeignKey("user.id"))
+
+class UserImage(Base):
+    """用户生成的图片"""
+    __tablename__ = "user_image"
+
+    id = Column(Integer, primary_key=True)
+    prompt = Column(Text)
+    quality = Column(String(20))
+    size = Column(String(20))
+    revised_prompt = Column(Text)
+    image_url = Column(String(255))
+    update_time = Column(TIMESTAMP)
+    create_time = Column(TIMESTAMP)
+    user_id = Column(Integer, ForeignKey("user.id"))

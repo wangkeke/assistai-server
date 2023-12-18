@@ -19,6 +19,10 @@ router = APIRouter(
 
 log = logging.getLogger(__name__)
 
+DATA_PATH = os.getenv("DATA_PATH", "/home/lighthouse/workspace/data/")
+if not os.path.exists(DATA_PATH):
+    os.makedirs(DATA_PATH, exist_ok=True)
+
 # 检查请求限制
 def check_request_limit(db: Session, current_user: schemas.User):
     # 检查是否超出使用限制
@@ -87,7 +91,13 @@ async def event_publisher(chunks, db: Session, topic_id: str, remain_num: int):
 async def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
-        response = chat_completion(topic_chats)
+        import hashlib
+        user_dir = hashlib.md5(current_user.username.encode()).hexdigest()
+        response = chat_completion(
+            user_id=current_user.id, 
+            user_partition=os.getenv("DATA_PATH")+user_dir, 
+            topic_chats=topic_chats
+            )
         return EventSourceResponse(event_publisher(response, db=db, topic_id=topic_id, remain_num=rpd_amount - user_chat_stats.stats_value - 1))
     finally: 
         crud.increase_user_chat_stats(db, id=user_chat_stats.id)

@@ -153,3 +153,27 @@ class UserChatStatsCreate(UserChatStatsBase):
 class Message(BaseModel):
     role: str = Query(default="user", regex="^(system)|(assistant)|(user)$")
     content: str = Query(default=...)
+
+class CreateUserFile(BaseModel):
+    file_etag: str = Query(max_length=255)
+    file_name: str = Query(max_length=255)
+    content_type: str = Query(max_length=255)
+    file_format: str | None = Query(max_length=20)
+    file_size: int = Query(min=0)
+    file_url: str = Query(max_length=255)
+    class Config:
+        orm_mode = True
+
+class UserFile(CreateUserFile):
+    id: int
+    class Config:
+        orm_mode = True
+
+class UserImageCreate(BaseModel):
+    prompt: str
+    quality: str | None
+    size: str | None
+    style: str | None
+    revised_prompt: str | None
+    image_url: str
+    user_id: int
