@@ -1,7 +1,7 @@
 import os
 import urllib.request
 import uuid
-from agents.core import client, aclient
+from agents.core import client
 from agents.retrievers.file_retrieval_tool import summary_of_files, retrieval_of_files
 import ssl
 from agents.util import encode_image
@@ -23,7 +23,7 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         quality = "standard"
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    response = await aclient.images.generate(
+    response = await client.images.generate(
         model="dall-e-3",
         prompt=prompt,
         size=size,
@@ -64,7 +64,7 @@ async def understanding_image(user_id: int, user_partition: str, content: str, t
         elif image_url.endswith(".gif"):
             content_type = "image/gif"
         content.append({"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{encode_image(image_url=image_url)}"}})
-    response = await aclient.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4-vision-preview",       
         messages=[
             {
