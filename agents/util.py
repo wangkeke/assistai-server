@@ -1,6 +1,7 @@
 import os
 import base64
 import asyncio
+asyncio.set_event_loop(asyncio.new_event_loop())
 import nest_asyncio
 nest_asyncio.apply()
 
