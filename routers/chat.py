@@ -88,7 +88,7 @@ async def event_publisher(chunks, db: Session, topic_id: str, remain_num: int):
 
 # 聊天交互接口
 @router.post("/{topic_id}/conversation")
-async def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+def chat(topic_id: str, topic_chats: list[schemas.TopicChatCreate], current_user: Annotated[schemas.User, Depends(get_current_user)], db: Session = Depends(get_db)):
     user_chat_stats, rpd_amount = check_request_limit(db, current_user=current_user)
     try:
         import hashlib
