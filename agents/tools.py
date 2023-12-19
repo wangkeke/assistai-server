@@ -29,28 +29,16 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         n = 4
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    if n == 1:
-        responses = [
-            client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size=size,
-                quality=quality,
-                n=1,
-            )
-        ]
-    else: 
-        responses = abatch_tasks([aclient.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size=size,
-                quality=quality,
-                n=1,
-            ) for _ in range(n)])   
-        # import concurrent.futures
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
-        #     responses = executor.map(_generate_image_task, [(prompt, size, quality) for _ in range(n)])
-    
+    responses = abatch_tasks([
+        aclient.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size=size,
+            quality=quality,
+            n=1,
+        ) 
+        for _ in range(n)
+    ])
     nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
     domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
     os.makedirs(f"{user_partition}/images", exist_ok=True)

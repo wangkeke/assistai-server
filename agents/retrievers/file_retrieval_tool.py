@@ -8,7 +8,7 @@ from agents.core import chat_open_ai, chat_open_ai_16k, embeddings
 from agents.retrievers.file_loads import doc_loads
 
 
-def summary_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
+async def summary_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
     """Useful when you need to retrieve summaries of uploaded files, excluding image files."""
     file_urls: list[str] = tool_args.get("file_urls")
     summaries = []
@@ -24,7 +24,7 @@ def summary_of_files(user_id: int, user_partition: str, content: str, tool_args:
     return f"Here is the result from the summary_of_files tool: {result}"
 
 
-def retrieval_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
+async def retrieval_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
     """Useful when you need to retrieve documents relevant to a query, excluding image files."""
     file_urls: list[str] = tool_args.get("file_urls")
     query: str = tool_args.get("query")
