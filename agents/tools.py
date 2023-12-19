@@ -39,14 +39,17 @@ def generate_image(user_id: int, user_partition: str, content: str, tool_args: d
                 n=1,
             )
         ]
-    else:
+    else: 
         responses = abatch_tasks([aclient.images.generate(
                 model="dall-e-3",
                 prompt=prompt,
                 size=size,
                 quality=quality,
                 n=1,
-            ) for _ in range(n)])
+            ) for _ in range(n)])   
+        # import concurrent.futures
+        # with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+        #     responses = executor.map(_generate_image_task, [(prompt, size, quality) for _ in range(n)])
     
     nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
     domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
@@ -70,6 +73,16 @@ def generate_image(user_id: int, user_partition: str, content: str, tool_args: d
             })
         image_list.append(image_url)
     return "Here is the results from the generate_image tool:\n\n" + ('\n'.join(image_list))
+
+def _generate_image_task(args: Tuple) -> Any:
+    prompt, size, quality = args
+    return client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size=size,
+                quality=quality,
+                n=1,
+            )
 
 def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Understand images based on user description"""

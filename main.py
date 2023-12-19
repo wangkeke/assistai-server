@@ -67,4 +67,4 @@ async def swagger_ui_redirect():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=200)
+    uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=200, loop="asyncio")
