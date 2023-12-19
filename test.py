@@ -773,3 +773,17 @@ list(t["id"] for t in lst)
 1024/1792 
 
 3/4
+
+# ===========================================================
+import concurrent.futures
+import asyncio
+
+def test(args):
+    id, name = args
+    return id,name
+n = 4
+with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+        results = executor.map(test, [(i, f"task-{i}") for i in range(n)])
+
+for result in results:
+    print(result) 
