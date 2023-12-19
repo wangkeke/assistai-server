@@ -55,20 +55,22 @@ def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas
         function_name = tool_call.function.name
         function_to_call = tool_functions[function_name]
         function_args = json.loads(tool_call.function.arguments)
+        result = function_to_call(user_id=user_id, user_partition=user_partition, content=text, tool_args=function_args)
+        character_count += len(result)
         tool_function_messages.append(
             {
                 "tool_call_id": tool_call.id,
                 "role": "tool",
                 "name": function_name,
-                "funciton_call": function_to_call(user_id=user_id, user_partition=user_partition, content=text, tool_args=function_args),
+                "content": result,
             }
         )
-    results = abatch_tasks(list(tool_function_message["funciton_call"] 
-                      for tool_function_message in tool_function_messages))
-    for i, result in enumerate(results):
-        character_count += len(result)
-        tool_function_messages[i]["content"] = result
-        del tool_function_messages[i]["funciton_call"]
+    # results = abatch_tasks(list(tool_function_message["funciton_call"] 
+    #                   for tool_function_message in tool_function_messages))
+    # for i, result in enumerate(results):
+    #     character_count += len(result)
+    #     tool_function_messages[i]["content"] = result
+    #     del tool_function_messages[i]["funciton_call"]
     messages.extend(tool_function_messages)
     model = "gpt-3.5-turbo-1106"
     if character_count>4000:

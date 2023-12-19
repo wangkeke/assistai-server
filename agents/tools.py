@@ -15,7 +15,7 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 # 图像生成
-async def generate_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
+def generate_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Generate an image based on the prompt"""
     prompt: str = tool_args.get("prompt")
     size: str = "1024x1024"
@@ -29,9 +29,21 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         n = 4
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
-        responses = executor.map(_generate_image_task, [(prompt, size, quality) for _ in range(n)])
+    if n == 1:
+        responses = [
+            client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size=size,
+                quality=quality,
+                n=1,
+            )
+        ]
+    else:
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+            responses = executor.map(_generate_image_task, [(prompt, size, quality) for _ in range(n)])
+    
     nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
     domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
     os.makedirs(f"{user_partition}/images", exist_ok=True)
@@ -65,7 +77,7 @@ def _generate_image_task(args: Tuple) -> Any:
                 n=1,
             )
 
-async def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
+def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Understand images based on user description"""
     image_urls: list[str] = tool_args.get("image_urls")
     contents = []
@@ -78,7 +90,7 @@ async def understanding_image(user_id: int, user_partition: str, content: str, t
         elif image_url.endswith(".gif"):
             content_type = "image/gif"
         content.append({"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{encode_image(image_url=image_url)}"}})
-    response = await aclient.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4-vision-preview",       
         messages=[
             {

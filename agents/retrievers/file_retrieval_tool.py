@@ -8,7 +8,7 @@ from agents.core import chat_open_ai, chat_open_ai_16k, embeddings
 from agents.retrievers.file_loads import doc_loads
 
 
-async def summary_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
+def summary_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
     """Useful when you need to retrieve summaries of uploaded files, excluding image files."""
     file_urls: list[str] = tool_args.get("file_urls")
     summaries = []
@@ -16,7 +16,7 @@ async def summary_of_files(user_id: int, user_partition: str, content: str, tool
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
-        summary = await parse_file(file_name=file_name, 
+        summary = parse_file(file_name=file_name, 
                              file_etag=file_etag, 
                              user_partition=user_partition)
         summaries.append(f"{i+1}: " + summary.page_content)
@@ -24,7 +24,7 @@ async def summary_of_files(user_id: int, user_partition: str, content: str, tool
     return f"Here is the result from the summary_of_files tool: {result}"
 
 
-async def retrieval_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
+def retrieval_of_files(user_id: int, user_partition: str, content: str, tool_args: dict):
     """Useful when you need to retrieve documents relevant to a query, excluding image files."""
     file_urls: list[str] = tool_args.get("file_urls")
     query: str = tool_args.get("query")
@@ -53,7 +53,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
-        await parse_file(file_name=file_name, file_etag=file_etag, user_partition=user_partition)
+        parse_file(file_name=file_name, file_etag=file_etag, user_partition=user_partition)
         metadata={"source": file_name}
         if page:
             metadata["page"] = page+1
@@ -65,7 +65,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
     return f"Here is the result from the retrieval_of_files tool: {result}"
     
 
-async def parse_file(file_name: str, file_etag: str, user_partition: str) -> Document:
+def parse_file(file_name: str, file_etag: str, user_partition: str) -> Document:
     """parse uploaded file"""
     # The storage layer for the parent documents
     docstore = LocalFileStore(f"{user_partition}/store/docs")

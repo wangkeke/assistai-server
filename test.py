@@ -780,6 +780,7 @@ import asyncio
 
 def test(args):
     id, name = args
+    asyncio.sleep(1000)
     return id,name
 n = 4
 with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
@@ -787,3 +788,5 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
 
 for result in results:
     print(result) 
+
+({id:1})
