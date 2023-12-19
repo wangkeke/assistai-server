@@ -4,7 +4,7 @@ import uuid
 from agents.core import client, aclient
 from agents.retrievers.file_retrieval_tool import summary_of_files, retrieval_of_files
 import ssl
-from agents.util import encode_image, batch_tasks
+from agents.util import encode_image, nest_batch_tasks
 from orm.crud import create_user_image
 
 
@@ -28,7 +28,8 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         n = 4
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    responses = batch_tasks(
+
+    responses = nest_batch_tasks(
         [
             aclient.images.generate(
             model="dall-e-3",
