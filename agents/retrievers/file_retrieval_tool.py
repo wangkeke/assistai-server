@@ -70,7 +70,7 @@ def parse_file(file_name: str, file_etag: str, user_partition: str) -> Document:
     # The storage layer for the parent documents
     docstore = LocalFileStore(f"{user_partition}/store/docs")
     summary = docstore.mget([file_etag])
-    if summary:
+    if summary and summary[0]:
         return summary[0]
     # The vectorstore to use to index the child chunks
     vectorstore = Chroma(collection_name="documents", 
