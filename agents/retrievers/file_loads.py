@@ -35,9 +35,9 @@ def doc_loads(
 def text_load(file_path: str) -> Tuple[List[Document], List[Document]]:
     """load file data, Included file format: .txt, .log, .sql"""
     data = TextLoader(file_path=file_path, encoding="utf-8").load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=0)
     docs = text_splitter.split_documents(data)
-    large_text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000)
+    large_text_splitter = RecursiveCharacterTextSplitter(chunk_size=4000)
     large_docs = large_text_splitter.split_documents(data)
     return docs, large_docs
 
@@ -46,6 +46,6 @@ def pdf_load(file_path: str) -> Tuple[List[Document], List[Document]]:
     docs = PyPDFium2Loader(file_path=file_path, extract_images=True).load()
     full_docs = [doc.page_content for doc in docs]
     full_document = Document(page_content="\n\n".join(full_docs), metadata={"source": file_path})
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=4000)
     large_docs = text_splitter.split_documents([full_document])
     return docs, large_docs 

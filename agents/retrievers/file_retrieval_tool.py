@@ -79,18 +79,18 @@ async def parse_file(file_name: str, file_etag: str, user_partition: str) -> Doc
     id_key = "doc_id"
     summary_chain = (
         {"doc": lambda x: x.page_content}
-        | ChatPromptTemplate.from_template("Summarize the following document in less than 300 words:\n\n{doc}")
+        | ChatPromptTemplate.from_template("Summarize the following document in less than 200 words:\n\n{doc}")
         | chat_open_ai
         | StrOutputParser()
     )
+    doc_ids, docs, large_docs = doc_loads(user_partition + "/upload/" + file_name, file_etag=file_etag, id_key=id_key)
+    fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": 5})
     full_summary_chain = (
         {"content": lambda contents: "\n\n".join(contents)}
         | ChatPromptTemplate.from_template("Summarize the following document:\n\n{content}")
         | chat_open_ai_16k
         | StrOutputParser()
     )
-    doc_ids, docs, large_docs = doc_loads(user_partition + "/upload/" + file_name, file_etag=file_etag, id_key=id_key)
-    fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": 5})
     full_summary_text = full_summary_chain.invoke(fragment_summaries)
     full_summary_document = Document(page_content=full_summary_text, 
                                         metadata={"source": file_name, "doc_id": file_etag})
