@@ -15,7 +15,7 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 # 图像生成
-def generate_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
+async def generate_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Generate an image based on the prompt"""
     prompt: str = tool_args.get("prompt")
     size: str = "1024x1024"
