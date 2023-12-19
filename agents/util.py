@@ -1,6 +1,8 @@
 import os
 import base64
 import asyncio
+import nest_asyncio
+nest_asyncio.apply()
 
 
 # Function to encode the image

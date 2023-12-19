@@ -4,7 +4,7 @@ import uuid
 from agents.core import client, aclient
 from agents.retrievers.file_retrieval_tool import summary_of_files, retrieval_of_files
 import ssl
-from agents.util import encode_image
+from agents.util import encode_image, batch_tasks
 from orm.crud import create_user_image
 
 
@@ -21,34 +21,47 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
     quality: str = tool_args.get("quality")
     if not quality:
         quality = "standard"
+    n: int = tool_args.get("n")
+    if not n or n<1:
+        n = 1
+    elif n>4:
+        n = 4
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
-    response = await aclient.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        size=size,
-        quality=quality,
-        n=1,
+    responses = batch_tasks(
+        [
+            aclient.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size=size,
+            quality=quality,
+            n=1,
+            )
+            for i in range(n)
+        ]
     )
     nginx_prefix = os.environ.get("NGINX_API_LOCATION","")
     domain_name = os.getenv("DOMAIN_NAME", "http://localhost:8000")
     os.makedirs(f"{user_partition}/images", exist_ok=True)
-    image_url = response.data[0].url
-    revised_prompt = response.data[0].revised_prompt
-    image_path = f"{user_partition}/images/{str(uuid.uuid4())}.png"
-    with urllib.request.urlopen(image_url, context=ctx) as response:
-        with open(image_path, 'wb') as f: 
-            f.write(response.read())
-    user_image_path = image_path.replace(os.getenv("DATA_PATH"),"")
-    image_url = f'{domain_name + nginx_prefix}/static/{user_image_path}'
-    create_user_image(user_id=user_id, user_image={
-            "prompt": prompt,
-            "quality": quality,
-            "size": size,
-            "revised_prompt": revised_prompt,
-            "image_url": image_url
-        })
-    return f"Here is the results from the generate_image tool: {image_url}"
+    image_list = []
+    for i, response in enumerate(responses):
+        image_url = response.data[0].url
+        revised_prompt = response.data[0].revised_prompt
+        image_path = f"{user_partition}/images/{str(uuid.uuid4())}.png"
+        with urllib.request.urlopen(image_url, context=ctx) as response:
+            with open(image_path, 'wb') as f: 
+                f.write(response.read())
+        user_image_path = image_path.replace(os.getenv("DATA_PATH"),"")
+        image_url = f'{domain_name + nginx_prefix}/static/{user_image_path}'
+        create_user_image(user_id=user_id, user_image={
+                "prompt": prompt,
+                "quality": quality,
+                "size": size,
+                "revised_prompt": revised_prompt,
+                "image_url": image_url
+            })
+        image_list.append(f"{i+1}. {image_url}")
+    return "Here is the results from the generate_image tool:\n\n" + ('\n'.join(image_list))
 
 
 async def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
@@ -99,6 +112,10 @@ tools = [
                         "type": "string",
                         "enum": ["standard", "hd"],
                         "description": "The quality of the generated image",
+                    },
+                    "n": {
+                        "type": "number",
+                        "description": "The number of images to generate for a prompt"
                     },
                 },
                 "required": ["prompt"],
