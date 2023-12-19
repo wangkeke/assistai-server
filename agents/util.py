@@ -15,10 +15,10 @@ def encode_image(image_url: str):
 def batch_tasks(tool_functions: list):
   return asyncio.run(execute(tool_functions))
 
-# def nest_batch_tasks(tool_functions: list):
-#     loop = asyncio.new_event_loop() 
-#     asyncio.set_event_loop(loop)
-#     loop.run_until_complete(execute(tool_functions))
+def nest_batch_tasks(tool_functions: list):
+  loop = asyncio.new_event_loop() 
+  asyncio.set_event_loop(loop)
+  loop.run_until_complete(execute(tool_functions))
 
 def execute(tool_functions: list):
   return asyncio.gather(*tool_functions)
