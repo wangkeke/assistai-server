@@ -65,7 +65,7 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     )
     doc_ids, docs, large_docs = doc_loads(user_partition + "/upload/" + file_name, file_etag=file_etag, id_key=retriever.id_key)
     total_pages = len(docs)
-    fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": len(large_docs)})
+    fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": 5})
     full_summary_chain = (
         {"content": lambda contents: "\n\n".join(contents)}
         | ChatPromptTemplate.from_template("Summarize the following document:\n\n{content}")
