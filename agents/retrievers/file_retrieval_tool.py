@@ -41,7 +41,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
         full_summary_document = parse_file(retriever=retriever, file_name=file_name, file_etag=file_etag, user_partition=user_partition)
-        metadata={"source": file_name}
+        metadata={"source": user_partition + "/upload/" + file_name}
         total_pages: int = full_summary_document.metadata["total_pages"]
         if page:
             metadata["page"] = total_pages + page - 1
@@ -65,7 +65,7 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     )
     doc_ids, docs, large_docs = doc_loads(user_partition + "/upload/" + file_name, file_etag=file_etag, id_key=retriever.id_key)
     total_pages = len(docs)
-    fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": 5})
+    fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": len(large_docs)})
     full_summary_chain = (
         {"content": lambda contents: "\n\n".join(contents)}
         | ChatPromptTemplate.from_template("Summarize the following document:\n\n{content}")
@@ -74,7 +74,7 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     )
     full_summary_text = full_summary_chain.invoke(fragment_summaries)
     full_summary_document = Document(page_content=full_summary_text, 
-                                        metadata={"source": file_name, "doc_id": file_etag, "total_pages": total_pages})
+                                        metadata={"source": user_partition + "/upload/" + file_name, "doc_id": file_etag, "total_pages": total_pages})
     retriever.vectorstore.add_documents(docs)
     retriever.docstore.mset(list(zip(doc_ids, docs)))
     retriever.docstore.mset([(file_etag, full_summary_document)])
