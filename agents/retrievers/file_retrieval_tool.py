@@ -47,9 +47,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
             metadata["page"] = total_pages + page - 1
         relevant_documents.extend(retriever.get_relevant_documents(query=query, metadata=metadata))
     results = []
-    print(f"++++++++++++++++++++++relevant_documents = {relevant_documents}")
     for i, relevant_document in enumerate(relevant_documents):
-        print(f"---------------------relevant_document={relevant_document}")
         results.append(f"{i+1}: " + relevant_document.page_content)
     return "Here is the result from the retrieval_of_files tool:\n\n" + ("\n".join(results))    
 
@@ -78,7 +76,6 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     full_summary_document = Document(page_content=full_summary_text, 
                                         metadata={"source": file_name, "doc_id": file_etag, "total_pages": total_pages})
     retriever.vectorstore.add_documents(docs)
-    print(f"?????????????????????????????????????docs = {docs}")
     retriever.docstore.mset(list(zip(doc_ids, docs)))
     retriever.docstore.mset([(file_etag, full_summary_document)])
     return full_summary_document
