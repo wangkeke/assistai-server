@@ -35,7 +35,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
     query: str = tool_args.get("query")
     page: int = tool_args.get("page", None)
     retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, search_type="mmr", search_kwargs={"k":1})
-    relevant_documents = [Document]
+    relevant_documents = []
     for file_url in file_urls:
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
@@ -78,9 +78,9 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     full_summary_document = Document(page_content=full_summary_text, 
                                         metadata={"source": file_name, "doc_id": file_etag, "total_pages": total_pages})
     retriever.vectorstore.add_documents(docs)
-    docs.append(full_summary_document)
-    doc_ids.append(file_etag)
+    print(f"?????????????????????????????????????docs = {docs}")
     retriever.docstore.mset(list(zip(doc_ids, docs)))
+    retriever.docstore.mset([(file_etag, full_summary_document)])
     return full_summary_document
 
 
