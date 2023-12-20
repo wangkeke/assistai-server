@@ -47,7 +47,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
             if page < 0:
                 metadata["page"] = total_pages + page
             else:
-                metadata["page"] = page - 1
+                metadata["page"] = page
         relevant_documents.extend(retriever.get_relevant_documents(query=query, metadata=metadata))
     results = []
     for i, relevant_document in enumerate(relevant_documents):
