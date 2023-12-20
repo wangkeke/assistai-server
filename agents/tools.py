@@ -27,6 +27,9 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         n = 1
     elif n>4:
         n = 4
+    style: str = tool_args.get("style")
+    if not style:
+        style = "vivid"
     # return f"Here is the result from the dall-e-3 tool: https://cdn.openai.com/API/images/guides/image_generation_simple.png"
     # return json.dumps({"prompt": prompt, "image_url": f'https://cdn.openai.com/API/images/guides/image_generation_simple.webp'})
     responses = abatch_tasks([
@@ -36,6 +39,7 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
             size=size,
             quality=quality,
             n=1,
+            style=style,
         ) 
         for _ in range(n)
     ])
@@ -62,15 +66,6 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
         image_list.append(image_url)
     return "Here is the results from the generate_image tool:\n\n" + ('\n'.join(image_list))
 
-def _generate_image_task(args: Tuple) -> Any:
-    prompt, size, quality = args
-    return client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size=size,
-                quality=quality,
-                n=1,
-            )
 
 def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Understand images based on user description"""
@@ -125,8 +120,13 @@ tools = [
                         "type": "number",
                         "description": "The number of images to generate for a prompt"
                     },
+                    "style": {
+                        "tyle": "string",
+                        "enum": ["vivid", "natural"],
+                        "description": "The style of the generated images. Must be one of vivid or natural. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images."
+                    },
                 },
-                "required": ["prompt"],
+                "required": ["prompt","quality","style"],
             },
         }
     },
