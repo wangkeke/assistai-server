@@ -44,7 +44,10 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
         metadata={"source": user_partition + "/upload/" + file_name}
         total_pages: int = full_summary_document.metadata["total_pages"]
         if page:
-            metadata["page"] = total_pages + page - 1
+            if page < 0:
+                metadata["page"] = total_pages + page
+            else:
+                metadata["page"] = page - 1
         relevant_documents.extend(retriever.get_relevant_documents(query=query, metadata=metadata))
     results = []
     for i, relevant_document in enumerate(relevant_documents):
@@ -65,6 +68,7 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     )
     doc_ids, docs, large_docs = doc_loads(user_partition + "/upload/" + file_name, file_etag=file_etag, id_key=retriever.id_key)
     total_pages = len(docs)
+    print("docs=" + docs)
     fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": 5})
     full_summary_chain = (
         {"content": lambda contents: "\n\n".join(contents)}
