@@ -91,7 +91,7 @@ def get_retriever(user_partition: str, file_etag: str, search_type: str, search_
     id_key = "doc_id"
     # The vectorstore to use to index the child chunks
     import hashlib
-    collection_name = hashlib.md5(file_etag).hexdigest()
+    collection_name = hashlib.md5(file_etag.encode()).hexdigest()
     vectorstore = Chroma(collection_name=collection_name, 
                          persist_directory=f"{user_partition}/chromadb/collections", 
                          embedding_function=embeddings)
