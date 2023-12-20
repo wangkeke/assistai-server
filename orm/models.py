@@ -126,6 +126,7 @@ class UserImage(Base):
     prompt = Column(Text)
     quality = Column(String(20))
     size = Column(String(20))
+    style=Column(String(20))
     revised_prompt = Column(Text)
     image_url = Column(String(255))
     update_time = Column(TIMESTAMP)

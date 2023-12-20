@@ -191,6 +191,7 @@ def create_user_image(user_id:int, user_image: dict):
             prompt = user_image["prompt"],
             quality = user_image["quality"],
             size = user_image["size"],
+            style = user_image["style"],
             revised_prompt = user_image["revised_prompt"],
             image_url = user_image["image_url"],
             update_time = datetime.now(),

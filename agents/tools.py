@@ -60,6 +60,7 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
                 "prompt": prompt,
                 "quality": quality,
                 "size": size,
+                "style": style,
                 "revised_prompt": revised_prompt,
                 "image_url": image_url
             })
@@ -126,7 +127,7 @@ tools = [
                         "description": "The style of the generated images. Must be one of vivid or natural. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images."
                     },
                 },
-                "required": ["prompt","quality","style"],
+                "required": ["prompt"],
             },
         }
     },
