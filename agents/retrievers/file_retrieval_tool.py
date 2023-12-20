@@ -16,11 +16,11 @@ async def summary_of_files(user_id: int, user_partition: str, content: str, tool
     """Useful when you need to retrieve summaries of uploaded files, excluding image files."""
     file_urls: list[str] = tool_args.get("file_urls")
     summaries = []
-    retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, search_type="mmr", search_kwargs={"k":1})
     for i, file_url in enumerate(file_urls):
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
+        retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, file_etag=file_etag, search_type="mmr", search_kwargs={"k":1})
         summary_document: Document = parse_file(retriever=retriever, 
                                                 file_name=file_name, 
                                                 file_etag=file_etag, 
@@ -34,14 +34,14 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
     file_urls: list[str] = tool_args.get("file_urls")
     query: str = tool_args.get("query")
     page: int = tool_args.get("page", None)
-    retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, search_type="mmr", search_kwargs={"k":1})
     relevant_documents = []
     for file_url in file_urls:
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
+        retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, file_etag=file_etag, search_type="mmr", search_kwargs={"k":1})
         full_summary_document = parse_file(retriever=retriever, file_name=file_name, file_etag=file_etag, user_partition=user_partition)
-        metadata={"source": file_name}
+        metadata={"source": user_partition + "/upload/" + file_name}
         total_pages: int = full_summary_document.metadata["total_pages"]
         if page:
             if page < 0:
@@ -49,7 +49,6 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
             else:
                 metadata["page"] = page - 1
         relevant_documents.extend(retriever.get_relevant_documents(query=query, metadata=metadata))
-    print(f"relevant_documents={relevant_documents}")
     results = []
     for i, relevant_document in enumerate(relevant_documents):
         results.append(f"{i+1}: " + relevant_document.page_content)
@@ -69,9 +68,6 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     )
     doc_ids, docs, large_docs = doc_loads(user_partition + "/upload/" + file_name, file_etag=file_etag, id_key=retriever.id_key)
     total_pages = len(docs)
-    for doc in docs:
-        doc.metadata["source"] = file_name
-    print(f"docs={docs}")
     fragment_summaries = summary_chain.batch(large_docs, {"max_concurrency": 5})
     full_summary_chain = (
         {"content": lambda contents: "\n\n".join(contents)}
@@ -81,20 +77,20 @@ def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, 
     )
     full_summary_text = full_summary_chain.invoke(fragment_summaries)
     full_summary_document = Document(page_content=full_summary_text, 
-                                        metadata={"source": file_name, "doc_id": file_etag, "total_pages": total_pages})
+                                        metadata={"source": user_partition + "/upload/" + file_name, "doc_id": file_etag, "total_pages": total_pages})
     retriever.vectorstore.add_documents(docs)
     retriever.docstore.mset(list(zip(doc_ids, docs)))
     retriever.docstore.mset([(file_etag, full_summary_document)])
     return full_summary_document
 
 
-def get_retriever(user_partition: str, search_type: str, search_kwargs: dict):
+def get_retriever(user_partition: str, file_etag: str, search_type: str, search_kwargs: dict):
     # The storage layer for the parent documents
-    docstore = LocalFileStore(f"{user_partition}/store/docs")
-    bytestore = LocalFileStore(f"{user_partition}/store/bytes")
+    docstore = LocalFileStore(f"{user_partition}/store/docs/{file_etag}")
+    bytestore = LocalFileStore(f"{user_partition}/store/bytes/{file_etag}")
     id_key = "doc_id"
     # The vectorstore to use to index the child chunks
-    vectorstore = Chroma(collection_name="documents", 
+    vectorstore = Chroma(collection_name=file_etag, 
                          persist_directory=f"{user_partition}/chromadb/collections", 
                          embedding_function=embeddings)
     return MultiVectorRetriever(
