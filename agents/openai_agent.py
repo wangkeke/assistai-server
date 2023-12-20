@@ -9,7 +9,7 @@ from agents.util import abatch_tasks
 
 def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas.TopicChatCreate]):
     model_name = os.environ.get("MODEL_NAME")
-    messages = [{"role":"system","content":'1. Never ignore the results of the tool.\n2. In the case of an image, use the following format to display it: ![Image Alt](Image Link "Image Title")'}]
+    messages = [{"role":"system","content":'1. Never ignore the results of the tool.\n2. In the case of an image, use the following format to display it: ![Image Alt](Image Link "Image Title").'}]
     last_topic_chat = topic_chats[-1]
     attachs = []
     for i, attach in enumerate(last_topic_chat.attachs):
