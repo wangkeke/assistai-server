@@ -53,10 +53,9 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
 
 def parse_file(retriever: MultiVectorRetriever, file_name: str, file_etag: str, user_partition: str) -> Document:
     """parse uploaded file"""
-    summary_documents = retriever.docstore.mget([file_etag])
-    print(f"+++++++++++++++summary_documents={summary_documents}")
-    if len(summary_documents) > 0:
-        return summary_documents[0]
+    summary_document = retriever.docstore.mget([file_etag])[0]
+    if summary_document:
+        return summary_document
     summary_chain = (
         {"doc": lambda x: x.page_content}
         | ChatPromptTemplate.from_template("Summarize the following document in less than 200 words:\n\n{doc}")
