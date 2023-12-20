@@ -790,3 +790,21 @@ for result in results:
     print(result) 
 
 ({id:1})
+
+
+# ========================================================
+from langchain.storage import LocalFileStore, InMemoryByteStore
+from langchain.document_loaders import TextLoader, PyPDFium2Loader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.storage import InMemoryByteStore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+
+file_path = "D:\\清华工程教育探究课程个人心得_20231211161930.pdf"
+docs = PyPDFium2Loader(file_path=file_path, extract_images=True).load()
+docs[0].page_content
