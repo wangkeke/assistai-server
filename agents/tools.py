@@ -92,6 +92,7 @@ async def understanding_image(user_id: int, user_partition: str, content: str, t
                 "content": contents,
             }
         ],
+        max_tokens=4000,
     )
     return f"Here is the result from the understanding_image tool: {response.choices[0].message.content}"
 
