@@ -68,7 +68,7 @@ async def generate_image(user_id: int, user_partition: str, content: str, tool_a
     return "Here is the results from the generate_image tool:\n\n" + ('\n'.join(image_list))
 
 
-def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
+async def understanding_image(user_id: int, user_partition: str, content: str, tool_args: dict) -> str:
     """Understand images based on user description"""
     image_urls: list[str] = tool_args.get("image_urls")
     contents = []
