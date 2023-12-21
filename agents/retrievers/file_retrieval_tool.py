@@ -20,7 +20,7 @@ async def summary_of_files(user_id: int, user_partition: str, content: str, tool
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
-        retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, file_etag=file_etag, search_type="mmr", search_kwargs={"k":1})
+        retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, file_etag=file_etag, search_type="mmr", search_kwargs={"k":2})
         summary_document: Document = parse_file(retriever=retriever, 
                                                 file_name=file_name, 
                                                 file_etag=file_etag, 
@@ -39,7 +39,7 @@ async def retrieval_of_files(user_id: int, user_partition: str, content: str, to
         final_path_pos = file_url.rfind("/")
         file_name = file_url[final_path_pos+1:]
         file_etag = file_name[:file_name.rfind(".")]
-        retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, file_etag=file_etag, search_type="mmr", search_kwargs={"k":1})
+        retriever: MultiVectorRetriever = get_retriever(user_partition=user_partition, file_etag=file_etag, search_type="mmr", search_kwargs={"k":2})
         full_summary_document = parse_file(retriever=retriever, file_name=file_name, file_etag=file_etag, user_partition=user_partition)
         metadata={"source": user_partition + "/upload/" + file_name}
         total_pages: int = full_summary_document.metadata["total_pages"]
