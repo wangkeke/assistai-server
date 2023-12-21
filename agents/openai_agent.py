@@ -71,7 +71,7 @@ def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas
         del tool_function_messages[i]["function_call"]
     messages.extend(tool_function_messages)
     model = "gpt-3.5-turbo-1106"
-    if character_count > max_encoding_tokens():
+    if character_count > 4096:
         model = "gpt-3.5-turbo-16k"
     return client.chat.completions.create(
         model= model,
