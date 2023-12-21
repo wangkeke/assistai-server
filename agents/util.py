@@ -6,10 +6,8 @@ nest_asyncio.apply()
 
 
 # Function to encode the image
-def encode_image(image_url: str):
-  UPLOAD_PATH = os.getenv("UPLOAD_PATH", "/home/lighthouse/workspace/data/upload/")
-  path = image_url[image_url.index("/upload/") + 8:]
-  with open(UPLOAD_PATH + path, "rb") as image_file:
+def encode_image(image_path: str):
+  with open(image_path, "rb") as image_file:
     return base64.b64encode(image_file.read()).decode('utf-8')
 
 def abatch_tasks(tool_functions: list):

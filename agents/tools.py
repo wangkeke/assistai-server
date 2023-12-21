@@ -75,12 +75,14 @@ def understanding_image(user_id: int, user_partition: str, content: str, tool_ar
     if content:
         contents.append({"type": "text", "text": content})
     for image_url in image_urls:
+        final_path_pos = image_url.rfind("/")
+        file_name = image_url[final_path_pos+1:]
         content_type = "image/jpeg"
         if image_url.endswith(".png"):
             content_type = "image/png"
         elif image_url.endswith(".gif"):
             content_type = "image/gif"
-        contents.append({"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{encode_image(image_url=image_url)}"}})
+        contents.append({"type": "image_url", "image_url": {"url": f"data:{content_type};base64,{encode_image(image_path=user_partition + "/upload/" + file_name)}"}})
     response = client.chat.completions.create(
         model="gpt-4-vision-preview",       
         messages=[
