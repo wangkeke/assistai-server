@@ -5,7 +5,7 @@ import uuid
 from agents.core import client, aclient
 from agents.retrievers.file_retrieval_tool import summary_of_files, retrieval_of_files
 import ssl
-from agents.util import encode_image, abatch_tasks
+from agents.util import encode_image, abatch_tasks, max_encoding_tokens
 from orm.crud import create_user_image
 
 
@@ -92,7 +92,7 @@ async def understanding_image(user_id: int, user_partition: str, content: str, t
                 "content": contents,
             }
         ],
-        max_tokens=4000,
+        max_tokens=max_encoding_tokens("gpt-4"),
     )
     return f"Here is the result from the understanding_image tool: {response.choices[0].message.content}"
 
