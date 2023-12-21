@@ -4,7 +4,7 @@ from typing import List
 from agents.core import client, logger
 from agents.tools import tools, tool_functions
 from orm import schemas
-from agents.util import abatch_tasks
+from agents.util import abatch_tasks, num_tokens_from_string, max_encoding_tokens
 
 
 def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas.TopicChatCreate]):
@@ -19,7 +19,7 @@ def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas
         last_topic_chat.content = text + "\n\nList of uploaded files：" + "\n".join(attachs)
     character_count = 0
     for topic_chat in topic_chats:
-        character_count += len(topic_chat.content)
+        character_count += num_tokens_from_string(topic_chat.content)
         messages.append({"role": topic_chat.role, "content": topic_chat.content})
 
     response = client.chat.completions.create(
@@ -66,12 +66,12 @@ def chat_completion(user_id: int, user_partition: str, topic_chats: list[schemas
     results = abatch_tasks(list(tool_function_message["function_call"] 
                       for tool_function_message in tool_function_messages))
     for i, result in enumerate(results):
-        character_count += len(result)
+        character_count += num_tokens_from_string(result)
         tool_function_messages[i]["content"] = result
         del tool_function_messages[i]["function_call"]
     messages.extend(tool_function_messages)
     model = "gpt-3.5-turbo-1106"
-    if character_count>4000:
+    if character_count > max_encoding_tokens():
         model = "gpt-3.5-turbo-16k"
     return client.chat.completions.create(
         model= model,

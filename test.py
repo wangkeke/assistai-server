@@ -808,3 +808,17 @@ from langchain.retrievers.multi_vector import MultiVectorRetriever
 file_path = "D:\\清华工程教育探究课程个人心得_20231211161930.pdf"
 docs = PyPDFium2Loader(file_path=file_path, extract_images=True).load()
 docs[0].page_content
+
+
+# ==================================================================
+
+import tiktoken
+# enc = tiktoken.get_encoding("cl100k_base")
+# enc.encode("hello world")
+
+# assert enc.decode(enc.encode("hello world")) == "hello world"
+
+enc = tiktoken.get_encoding("cl100k_base")
+enc.max_token_value
+# To get the tokeniser corresponding to a specific model in the OpenAI API:
+enc.encode("根据图像识别工具的结果，这张图片似乎是一个系统架构图，展示了一套计算机系统或软件的组件以及它们之间的交互关系。具体的内容包括不同云服务、存储选项、设备图标、数据库、计算机节点、数据存储、监控或分析服务等。此外，还有不同用户类型或角色与系统中不同部分的交互关系。由于图片中的文字较小，建议查看原始图片以获取更详细的信息。")
